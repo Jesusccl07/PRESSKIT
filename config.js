@@ -1,21 +1,22 @@
 /* =========================================================================
    CONFIGURACIÓN DEL PRESS KIT — edita SOLO este archivo con tus datos.
-   Todo lo que está entre [corchetes] es un hueco para rellenar.
-   Las imágenes van en la carpeta /assets (mira assets/LEEME.md).
+   Mientras un dato esté vacío, entre [corchetes] o sea una cifra en 0,
+   NO se muestra en la web: así el enlace público nunca enseña huecos.
    ========================================================================= */
 window.PRESSKIT = {
   artist: {
-    name: "CLEMENT",                       // Nombre artístico (sale en el logo de texto si no hay logo.png)
-    tagline: "[Tu frase / estilo en una línea]",
-    genres: ["[Género 1]", "[Género 2]", "[Género 3]"],
-    location: "[Ciudad, País]",
-    bpm: 128,                               // Velocidad del "latido" de las animaciones
+    name: "CLEMENT",
+    tagline: "Urbano, dembow y trap desde Ciudad Real",
+    genres: ["Urbano", "Dembow", "Trap"],
+    location: "Ciudad Real, España",
+    bpm: 128,                               // Velocidad del "latido" de las animaciones y del botón Play
   },
 
   // Logo (blanco, fondo transparente). Si no existe, se usa un logo de texto animado.
   logo: {
     main: "assets/logo.webp",
     downloads: [
+      { label: "Press kit completo (.zip)", src: "assets/download/clement-presskit.zip", primary: true },
       { label: "Logo blanco (PNG)", src: "assets/download/clement-logo-blanco.png" },
       { label: "Logo negro (PNG)",  src: "assets/download/clement-logo-negro.png" },
     ],
@@ -27,24 +28,22 @@ window.PRESSKIT = {
   banner: "assets/photos/clement-banner.jpg",      // Banner horizontal a pantalla completa (se oculta si no existe)
 
   bio: {
-    short: "[Bio corta: 2-3 frases. Quién eres, qué pinchas y qué te hace diferente.]",
+    short: "CLEMENT es el DJ de Ciudad Real que convierte cada sesión en una fiesta urbana: dembow, trap y lo más fuerte del género, con energía de principio a fin.",
     long: [
-      "[Párrafo 1: tus inicios y cómo empezaste a pinchar.]",
-      "[Párrafo 2: tu sonido, influencias y lo que se vive en tus sets.]",
-      "[Párrafo 3: logros, clubs, festivales, producciones y próximos pasos.]",
+      "Con más de seis años detrás de la cabina y más de 300 eventos a sus espaldas, CLEMENT se ha hecho un nombre propio en la noche urbana de Ciudad Real.",
+      "Su sonido mezcla urbano, dembow y trap: sets rápidos, transiciones con carácter y una selección pensada para que la pista no pare. Lee al público y sube la energía en el momento justo.",
+      "Ha pasado por cabinas como La Club, Sala Systema y Euphoria, y sigue creciendo con una imagen propia y una marca reconocible: CLEMENT.",
     ],
   },
 
   stats: [
-    { value: 0,  suffix: "+", label: "Eventos" },
-    { value: 0,  suffix: "+", label: "Años pinchando" },
-    { value: 0,  suffix: "K", label: "Seguidores" },
-    { value: 0,  suffix: "",  label: "Ciudades" },
+    { value: 300, suffix: "+", label: "Eventos" },
+    { value: 6,   suffix: "+", label: "Años pinchando" },
   ],
 
-  // Fotos de prensa (se pueden descargar desde la web)
+  // Fotos de prensa (se pueden ampliar y descargar desde la web)
   photos: [
-    { src: "assets/photos/clement-cascos.webp",          wide: true },
+    { src: "assets/photos/clement-cascos.webp", wide: true },
     { src: "assets/photos/clement-gafas.webp" },
     { src: "assets/photos/clement-brazos-cruzados.webp" },
     { src: "assets/photos/clement-sentado.webp" },
@@ -56,30 +55,32 @@ window.PRESSKIT = {
     // { title: "Live Set @ ...", embed: "https://w.soundcloud.com/player/?url=..." },
   ],
 
-  // Eventos / clubs / festivales donde has pinchado
+  // Salas / eventos. Si añades fecha y ciudad, se muestran en la lista.
   events: [
-    { date: "[Fecha]", venue: "[Club / Festival]", city: "[Ciudad]" },
-    { date: "[Fecha]", venue: "[Club / Festival]", city: "[Ciudad]" },
-    { date: "[Fecha]", venue: "[Club / Festival]", city: "[Ciudad]" },
+    { date: "", venue: "La Club",       city: "" },
+    { date: "", venue: "Sala Systema",  city: "" },
+    { date: "", venue: "Euphoria",      city: "" },
   ],
 
   // Rider técnico
   rider: [
-    "2x Pioneer CDJ-3000 (o CDJ-2000NXS2)",
-    "1x Mixer Pioneer DJM-900NXS2 / DJM-A9",
-    "2x Monitores de cabina de alta potencia",
-    "Mesa estable a la altura de la cintura",
-    "[Añade aquí lo que necesites]",
+    "2x Pioneer CDJ-3000 (o CDJ-2000NXS2) enlazados por Pro DJ Link",
+    "1x Mixer Pioneer DJM-A9 o DJM-900NXS2",
+    "2x Monitores de cabina potentes, a la altura del DJ",
+    "1x Micrófono inalámbrico (Shure SM58 / Beta 58) conectado al mixer",
+    "Cabina estable, a la altura de la cintura y sin vibraciones",
+    "Toma de corriente libre en cabina",
+    "Agua y toalla en cabina",
   ],
 
   contact: {
-    bookingEmail: "[booking@tumarca.com]",
-    phone: "[+34 600 000 000]",
-    whatsapp: "",                           // Solo números, ej: "34600000000"
-    instagram: "",                          // Usuario sin @, ej: "clement.dj"
-    tiktok: "",                             // Usuario sin @
-    soundcloud: "",                         // URL completa
-    spotify: "",                            // URL completa
-    youtube: "",                            // URL completa
+    bookingEmail: "jesusclesan@gmail.com",
+    phone: "+34 633 156 465",
+    whatsapp: "34633156465",                // Solo números
+    instagram: "jesusccl_",                 // Usuario sin @
+    tiktok: "djclement07",                  // Usuario sin @
+    soundcloud: "",
+    spotify: "",
+    youtube: "",
   },
 };

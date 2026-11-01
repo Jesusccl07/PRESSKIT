@@ -1,10 +1,12 @@
-# Press Kit DJ
+# CLEMENT · DJ Press Kit
 
-Web de press kit animada (azul, azul oscuro, gris y negro). Sin dependencias: abre `index.html` en el navegador.
+Web pública: **https://jesusccl07.github.io/PRESSKIT/**
 
-## Cómo personalizarla
-1. Logos en `assets/` y `assets/download/`, fotos recortadas en `assets/photos/`.
-2. Rellena tus datos en `config.js`: bio, géneros, eventos, rider, email, teléfono, Instagram, TikTok…
-3. Abre `index.html`.
+Press kit animado (azul, azul oscuro, gris y negro). Sin dependencias.
 
-Si falta alguna imagen, la web muestra un sustituto animado en su lugar.
+## Cómo cambiar datos
+- Textos, contacto, salas, rider: `config.js`. Lo que esté vacío o entre `[corchetes]` no se muestra.
+- Logo: `assets/logo.webp` · Fotos sin fondo: `assets/photos/` · Descargas: `assets/download/`
+- Banner horizontal opcional: `assets/photos/clement-banner.jpg` (aparece solo si existe).
+
+Cada cambio subido a la rama publicada se actualiza en la web en 1-2 minutos (GitHub Pages).

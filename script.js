@@ -1,14 +1,19 @@
 (() => {
   const C = window.PRESSKIT;
   const $ = (s, el = document) => el.querySelector(s);
+  const $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  // Un dato es "hueco" si está vacío o sigue entre [corchetes]: no se muestra
+  const isPh = (v) => v == null || String(v).trim() === "" || /^\s*\[.*\]\s*$/.test(String(v));
+  const real = (arr) => (arr || []).filter((v) => !isPh(v));
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const finePointer = matchMedia("(pointer: fine)").matches;
+  const BPM = C.artist.bpm || 128;
+  const root = document.documentElement;
 
   document.body.classList.add("loading");
-  document.title = `${C.artist.name} · Press Kit`;
-  document.documentElement.style.setProperty("--beat", `${60 / (C.artist.bpm || 128)}s`);
+  root.style.setProperty("--beat", `${60 / BPM}s`);
 
-  // Comprueba si una imagen existe
   const probe = (src) => new Promise((res) => {
     if (!src) return res(false);
     const i = new Image();
@@ -17,79 +22,120 @@
     i.src = src;
   });
 
+  const hideSection = (id) => {
+    const s = document.getElementById(id);
+    if (s) s.hidden = true;
+  };
+
+  /* ===================== RENDER ===================== */
+  let hasLogo = false;
   const textLogo = (extra = "") => `<span class="text-logo ${extra}">${esc(C.artist.name)}</span>`;
+  const logoHTML = (cls = "") => hasLogo ? `<img src="${C.logo.main}" alt="${esc(C.artist.name)}" class="${cls}">` : textLogo(cls);
 
   async function renderLogos() {
-    const hasLogo = await probe(C.logo.main);
-    const alt = esc(C.artist.name);
-    const main = (cls = "") => hasLogo ? `<img src="${C.logo.main}" alt="${alt}" class="${cls}">` : textLogo(cls);
-    // Capa de brillo recortada con la forma del logo
-    const shine = hasLogo ? `<div class="logo-layer logo-shine" style="--logo:url('${C.logo.main}')"></div>` : "";
-    $("#heroLogo").innerHTML = `<div class="logo-stack">${main("logo-layer logo-main")}${main("logo-layer logo-glitch g1")}${main("logo-layer logo-glitch g2")}${shine}</div>`;
-    $("#loaderLogo").innerHTML = main();
-    $("#navLogo").innerHTML = main();
-    $("#footerLogo").innerHTML = main();
+    hasLogo = await probe(C.logo.main);
+    const shine = hasLogo ? `<span class="logo-layer logo-shine" style="--logo:url('${C.logo.main}')"></span>` : "";
+    $("#heroLogo").innerHTML = `<span class="logo-stack">${logoHTML("logo-layer logo-main")}${logoHTML("logo-layer logo-glitch g1")}${logoHTML("logo-layer logo-glitch g2")}${shine}</span>`;
+    $("#heroLogo").setAttribute("aria-label", C.artist.name);
+    $("#loaderLogo").innerHTML = logoHTML();
+    $("#navLogo").innerHTML = logoHTML();
+    $("#footerLogo").innerHTML = logoHTML();
   }
 
+  const contactItems = () => {
+    const k = C.contact;
+    return [
+      ["phone", "Teléfono", k.phone, `tel:${String(k.phone).replace(/[^\d+]/g, "")}`],
+      ["whatsapp", "WhatsApp", k.whatsapp && "Escríbeme", `https://wa.me/${k.whatsapp}`],
+      ["mail", "Email booking", k.bookingEmail, `mailto:${k.bookingEmail}`],
+      ["instagram", "Instagram", k.instagram && `@${k.instagram}`, `https://instagram.com/${k.instagram}`],
+      ["tiktok", "TikTok", k.tiktok && `@${k.tiktok}`, `https://www.tiktok.com/@${k.tiktok}`],
+      ["soundcloud", "SoundCloud", k.soundcloud && "Escuchar", k.soundcloud],
+      ["spotify", "Spotify", k.spotify && "Escuchar", k.spotify],
+      ["youtube", "YouTube", k.youtube && "Ver vídeos", k.youtube],
+    ].filter(([, , value]) => !isPh(value));
+  };
+  const music = () => (C.music || []).filter((m) => m && !isPh(m.embed));
+
   async function renderHero() {
-    if (await probe(C.heroImage)) {
-      $("#heroPerson").innerHTML = `<img src="${C.heroImage}" alt="${esc(C.artist.name)}">`;
-    }
-    $("#tagline").textContent = C.artist.tagline;
-    $("#genres").innerHTML = C.artist.genres.map((g) => `<span class="chip">${esc(g)}</span>`).join("");
-    const words = [C.artist.name, ...C.artist.genres, "Press Kit", "Booking"];
+    if (await probe(C.heroImage)) $("#heroPerson").innerHTML = `<img src="${C.heroImage}" alt="" fetchpriority="high">`;
+    const tag = $("#tagline");
+    if (isPh(C.artist.tagline)) tag.remove(); else tag.textContent = C.artist.tagline;
+    const genres = real(C.artist.genres);
+    if (genres.length) $("#genres").innerHTML = genres.map((g) => `<span class="chip">${esc(g)}</span>`).join("");
+    else $("#genres").remove();
+
+    const actions = [];
+    if (contactItems().length) actions.push(`<a href="#contact" class="btn btn-primary magnetic">Contratar</a>`);
+    if (music().length) actions.push(`<a href="#music" class="btn btn-ghost magnetic">Escuchar</a>`);
+    actions.push(`<a href="#photos" class="btn ${actions.length ? "btn-ghost" : "btn-primary"} magnetic">Ver fotos</a>`);
+    $("#heroActions").innerHTML = actions.slice(0, 2).join("");
+
+    const city = isPh(C.artist.location) ? "" : C.artist.location.split(",")[0];
+    const words = [C.artist.name, "DJ", ...genres, city, "Official Press Kit", "Booking"].filter(Boolean);
     const row = words.map((w) => `<span>${esc(w)}</span>`).join("");
-    $("#marquee").innerHTML = row + row + row + row;
+    $("#marquee").innerHTML = row.repeat(4);
   }
 
   async function renderBio() {
-    $("#bioShort").textContent = C.bio.short;
-    $("#bioLong").innerHTML = C.bio.long.map((p, i) => `<p class="reveal" style="--d:${i * 0.1}s">${esc(p)}</p>`).join("");
-    $("#location").textContent = `◉ ${C.artist.location}`;
-    const photo = C.bioImage;
-    $("#bioPhoto").innerHTML = (await probe(photo)) ? `<img src="${photo}" alt="${esc(C.artist.name)}">` : `<div class="ph">Tu foto<br>${esc(photo)}</div>`;
-    $("#stats").innerHTML = C.stats.map((s, i) =>
-      `<div class="stat reveal" style="--d:${i * 0.1}s"><strong data-count="${s.value}" data-suffix="${esc(s.suffix)}">0${esc(s.suffix)}</strong><span>${esc(s.label)}</span></div>`).join("");
+    const short = isPh(C.bio.short) ? "" : C.bio.short;
+    const long = real(C.bio.long);
+    const stats = (C.stats || []).filter((s) => +s.value > 0);
+    if (!short && !long.length && !stats.length) return hideSection("bio");
+
+    if (!short && !long.length) $(".bio-grid").hidden = true;
+    else {
+      $("#bioShort").textContent = short;
+      $("#bioLong").innerHTML = long.map((p, i) => `<p class="reveal" style="--d:${i * 0.1}s">${esc(p)}</p>`).join("");
+      if (isPh(C.artist.location)) $("#location").remove(); else $("#location").textContent = `◉ ${C.artist.location}`;
+      $("#bioPhoto").innerHTML = (await probe(C.bioImage)) ? `<img src="${C.bioImage}" alt="${esc(C.artist.name)}">` : "";
+    }
+    if (!stats.length) $("#stats").hidden = true;
+    else $("#stats").innerHTML = stats.map((s, i) =>
+      `<div class="stat reveal" style="--d:${i * 0.1}s"><strong data-count="${+s.value}" data-suffix="${esc(s.suffix)}">0${esc(s.suffix)}</strong><span>${esc(s.label)}</span></div>`).join("");
   }
 
   async function renderBanner() {
     if (!(await probe(C.banner))) return;
     $("#bannerImg").innerHTML = `<img src="${C.banner}" alt="${esc(C.artist.name)}">`;
     $("#banner").hidden = false;
-    const sec = $("#banner"), img = $("#bannerImg img");
-    addEventListener("scroll", () => {
-      const r = sec.getBoundingClientRect(), p = (r.top + r.height / 2 - innerHeight / 2) / innerHeight;
-      img.style.transform = `translateY(${p * -60}px) scale(1.12)`;
-    }, { passive: true });
   }
 
   function renderMusic() {
-    const grid = $("#musicGrid");
-    if (!C.music.length) {
-      grid.innerHTML = `<div class="music-empty reveal"><div class="vinyl"></div><p>Añade tus sets en <code>config.js → music</code> (embeds de SoundCloud, Spotify, YouTube o Mixcloud).</p></div>`;
-      return;
-    }
-    grid.innerHTML = C.music.map((m, i) =>
-      `<div class="music-card reveal" style="--d:${i * 0.1}s"><iframe src="${esc(m.embed)}" loading="lazy" allow="autoplay; encrypted-media"></iframe><h3>${esc(m.title)}</h3></div>`).join("");
+    const list = music();
+    if (!list.length) return hideSection("music");
+    $("#musicGrid").innerHTML = list.map((m, i) =>
+      `<div class="music-card reveal" style="--d:${i * 0.1}s"><iframe src="${esc(m.embed)}" loading="lazy" allow="autoplay; encrypted-media" title="${esc(m.title)}"></iframe><h3>${esc(m.title)}</h3></div>`).join("");
   }
 
+  let galleryList = [];
   async function renderGallery() {
     const ok = await Promise.all(C.photos.map((p) => probe(p.src)));
-    const figs = C.photos.map((p, i) => {
-      const cls = `reveal${p.wide ? " wide" : ""}`, d = `--d:${(i % 3) * 0.1}s`;
-      return ok[i]
-        ? `<figure class="${cls}" style="${d}" data-src="${p.src}"><img src="${p.src}" alt="${esc(C.artist.name)} · foto de prensa ${i + 1}" loading="lazy"></figure>`
-        : `<figure class="${cls}" style="${d}"><div class="ph">Foto ${i + 1}<br>${esc(p.src)}</div></figure>`;
-    }).join("");
-    const dls = (C.logo.downloads || []).map((l) => `<a class="btn btn-ghost" href="${l.src}" download>↓ ${esc(l.label)}</a>`).join("");
-    const card = dls ? `<div class="dl-card reveal" style="--d:.2s"><div class="dl-logo"><img src="${C.logo.main}" alt=""></div><p>Logos en alta calidad para carteles y flyers</p>${dls}</div>` : "";
+    const photos = C.photos.filter((_, i) => ok[i]);
+    galleryList = photos.map((p) => p.src);
+    const figs = photos.map((p, i) =>
+      `<figure class="reveal tilt${p.wide ? " wide" : ""}" style="--d:${(i % 3) * 0.1}s" data-i="${i}"><img src="${p.src}" alt="${esc(C.artist.name)} · foto de prensa ${i + 1}" loading="lazy"></figure>`).join("");
+    const dls = (C.logo.downloads || []).map((l) =>
+      `<a class="btn ${l.primary ? "btn-primary" : "btn-ghost"} magnetic" href="${l.src}" download>↓ ${esc(l.label)}</a>`).join("");
+    const card = dls ? `<div class="dl-card reveal" style="--d:.2s"><div class="dl-logo">${logoHTML()}</div><div class="dl-body"><p>Logos y fotos en alta calidad, con fondo transparente, para carteles y flyers.</p><div class="dl-btns">${dls}</div></div></div>` : "";
+    if (!figs && !card) return hideSection("photos");
     $("#gallery").innerHTML = figs + card;
   }
 
   function renderEvents() {
-    $("#eventsList").innerHTML = C.events.map((e, i) =>
-      `<li class="reveal" style="--d:${i * 0.08}s"><span class="date">${esc(e.date)}</span><span class="venue">${esc(e.venue)}</span><span class="city">${esc(e.city)}</span></li>`).join("");
-    $("#riderList").innerHTML = C.rider.map((r, i) =>
+    const events = (C.events || []).filter((e) => e && !isPh(e.venue));
+    // Sin fechas ni ciudades -> lista de salas "Ha pinchado en"
+    const venuesOnly = events.every((e) => isPh(e.date) && isPh(e.city));
+    if (!events.length) hideSection("events");
+    else {
+      if (venuesOnly) { $("#events h2").textContent = "Ha pinchado en"; $("#eventsList").classList.add("venues"); }
+      $("#eventsList").innerHTML = events.map((e, i) =>
+        `<li class="reveal" style="--d:${i * 0.08}s"><span class="date">${venuesOnly ? String(i + 1).padStart(2, "0") : isPh(e.date) ? "" : esc(e.date)}</span><span class="venue">${esc(e.venue)}</span><span class="city">${isPh(e.city) ? "" : esc(e.city)}</span></li>`).join("");
+    }
+
+    const rider = real(C.rider);
+    if (!rider.length) hideSection("rider");
+    else $("#riderList").innerHTML = rider.map((r, i) =>
       `<li class="reveal" style="--d:${i * 0.08}s"><b>${String(i + 1).padStart(2, "0")}</b><span>${esc(r)}</span></li>`).join("");
   }
 
@@ -103,155 +149,362 @@
     spotify: '<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.6 14.4a.6.6 0 0 1-.9.2c-2.4-1.4-5.3-1.8-8.8-1a.6.6 0 1 1-.3-1.2c3.8-.9 7.1-.5 9.8 1.1.3.2.4.6.2.9zm1.2-2.7a.8.8 0 0 1-1.1.3c-2.7-1.7-6.9-2.2-10.1-1.2a.8.8 0 1 1-.5-1.5c3.7-1.1 8.3-.6 11.4 1.3.4.2.5.7.3 1.1zm.1-2.8C14.7 9 9.4 8.8 6.3 9.7a1 1 0 1 1-.6-1.8c3.5-1.1 9.4-.9 13.1 1.3a1 1 0 0 1-.9 1.7z"/>',
     youtube: '<path d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12 31 31 0 0 0 1 16.8a3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .5-4.8 31 31 0 0 0-.5-4.8zM9.7 15V9l5.8 3z"/>',
   };
-  const isPlaceholder = (v) => !v || /^\[.*\]$/.test(v);
+  const linkAttrs = (href) => (href.startsWith("http") ? ' target="_blank" rel="noopener"' : "");
 
   function renderContact() {
-    const k = C.contact;
-    const mail = $("#contactMail");
-    mail.textContent = k.bookingEmail;
-    if (!isPlaceholder(k.bookingEmail)) mail.href = `mailto:${k.bookingEmail}`;
-    const items = [
-      ["phone", "Teléfono", k.phone, `tel:${String(k.phone).replace(/[^\d+]/g, "")}`],
-      ["whatsapp", "WhatsApp", k.whatsapp ? `+${k.whatsapp}` : "", `https://wa.me/${k.whatsapp}`],
-      ["mail", "Email booking", k.bookingEmail, `mailto:${k.bookingEmail}`],
-      ["instagram", "Instagram", k.instagram ? `@${k.instagram}` : "", `https://instagram.com/${k.instagram}`],
-      ["tiktok", "TikTok", k.tiktok ? `@${k.tiktok}` : "", `https://www.tiktok.com/@${k.tiktok}`],
-      ["soundcloud", "SoundCloud", k.soundcloud ? "Escuchar" : "", k.soundcloud],
-      ["spotify", "Spotify", k.spotify ? "Escuchar" : "", k.spotify],
-      ["youtube", "YouTube", k.youtube ? "Ver vídeos" : "", k.youtube],
-    ];
-    $("#contactGrid").innerHTML = items.map(([icon, label, value, href], i) => {
-      const empty = isPlaceholder(value);
-      const ext = href && href.startsWith("http") ? ' target="_blank" rel="noopener"' : "";
-      return `<a class="contact-card reveal${empty ? " empty" : ""}" style="--d:${i * 0.06}s" ${empty ? "" : `href="${esc(href)}"${ext}`}>
-        <svg viewBox="0 0 24 24">${ICONS[icon]}</svg><div><small>${label}</small><span>${esc(value || "Añadir en config.js")}</span></div></a>`;
-    }).join("");
+    const items = contactItems();
     $("#year").textContent = new Date().getFullYear();
+    if (!items.length) return hideSection("contact");
+
+    const mail = $("#contactMail");
+    if (isPh(C.contact.bookingEmail)) mail.remove();
+    else { mail.textContent = C.contact.bookingEmail; mail.href = `mailto:${C.contact.bookingEmail}`; }
+
+    // Si el email ya sale en grande, no se repite en tarjeta
+    const cards = mail.isConnected ? items.filter(([icon]) => icon !== "mail") : items;
+    $("#contactGrid").innerHTML = cards.map(([icon, label, value, href], i) =>
+      `<a class="contact-card reveal" style="--d:${i * 0.06}s" href="${esc(href)}"${linkAttrs(href)}>
+        <svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[icon]}</svg><div><small>${label}</small><span>${esc(value)}</span></div></a>`).join("");
+
+    const social = items.filter(([icon]) => !["phone", "mail"].includes(icon));
+    $("#footerSocial").innerHTML = social.map(([icon, label, , href]) =>
+      `<a href="${esc(href)}"${linkAttrs(href)} aria-label="${label}"><svg viewBox="0 0 24 24">${ICONS[icon]}</svg></a>`).join("");
   }
 
-  // ---------- Animaciones ----------
+  // Numera solo las secciones visibles y oculta del menú las que no hay
+  function finalizeLayout() {
+    $$(".section").filter((s) => !s.hidden).forEach((s, i) => { $(".num", s).textContent = String(i + 1).padStart(2, "0"); });
+    $$("#navLinks a").forEach((a) => {
+      const target = document.querySelector(a.getAttribute("href"));
+      if (!target || target.hidden) a.hidden = true;
+    });
+  }
+
+  /* ===================== SONIDO =====================
+     Groove sintetizado en el navegador (WebAudio) al BPM de la config.
+     Toda la web reacciona a cada bombo cuando está activado. */
+  const Sound = (() => {
+    let ctx, out, analyser, data, noise, timer, next = 0, step = 0, loop = 0, on = false;
+    const s16 = 60 / BPM / 4;
+    const kicks = [];
+    const ROOTS = [55, 55, 43.65, 49];          // La · La · Fa · Sol
+    function setup() {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      out = ctx.createGain(); out.gain.value = 0;
+      const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 4;
+      analyser = ctx.createAnalyser(); analyser.fftSize = 512; analyser.smoothingTimeConstant = 0.72;
+      data = new Uint8Array(analyser.frequencyBinCount);
+      out.connect(comp); comp.connect(analyser); analyser.connect(ctx.destination);
+      noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+      const d = noise.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    const env = (g, t, peak, decay) => {
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(peak, t + 0.004);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+    };
+    function kick(t) {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "sine"; o.frequency.setValueAtTime(165, t); o.frequency.exponentialRampToValueAtTime(44, t + 0.11);
+      env(g, t, 1, 0.42); o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.45);
+      kicks.push(t);
+    }
+    function hat(t, open, vol) {
+      const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      s.buffer = noise; f.type = "highpass"; f.frequency.value = 7500;
+      env(g, t, vol, open ? 0.2 : 0.04); s.connect(f); f.connect(g); g.connect(out);
+      s.start(t, Math.random() * 0.5); s.stop(t + 0.25);
+    }
+    function clap(t) {
+      const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      s.buffer = noise; f.type = "bandpass"; f.frequency.value = 1500; f.Q.value = 0.9;
+      g.gain.setValueAtTime(0.0001, t);
+      [0, 0.011, 0.022].forEach((o) => { g.gain.setValueAtTime(0.45, t + o); g.gain.exponentialRampToValueAtTime(0.06, t + o + 0.009); });
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+      s.connect(f); f.connect(g); g.connect(out); s.start(t); s.stop(t + 0.25);
+    }
+    function bass(t, freq) {
+      const o = ctx.createOscillator(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+      o.type = "sawtooth"; o.frequency.value = freq;
+      f.type = "lowpass"; f.Q.value = 7; f.frequency.setValueAtTime(950, t); f.frequency.exponentialRampToValueAtTime(140, t + 0.14);
+      env(g, t, 0.3, s16 * 1.7); o.connect(f); f.connect(g); g.connect(out); o.start(t); o.stop(t + s16 * 2);
+    }
+    function stab(t, rootHz, bright) {
+      const f = ctx.createBiquadFilter(), g = ctx.createGain();
+      f.type = "lowpass"; f.Q.value = 5; f.frequency.setValueAtTime(1200 + bright * 2400, t); f.frequency.exponentialRampToValueAtTime(380, t + 0.26);
+      env(g, t, 0.075, 0.32); f.connect(g); g.connect(out);
+      [1, 1.189, 1.498].forEach((r) => {
+        const o = ctx.createOscillator(); o.type = "sawtooth";
+        o.frequency.value = rootHz * r; o.detune.value = (Math.random() - 0.5) * 16;
+        o.connect(f); o.start(t); o.stop(t + 0.35);
+      });
+    }
+    function schedule(st, t) {
+      const s = st % 16, bar = Math.floor(st / 16) % 4, full = loop > 0;
+      if (s % 4 === 0) kick(t);
+      if (s % 4 === 2) { hat(t, true, 0.1); bass(t, ROOTS[bar]); }
+      else hat(t, false, s % 2 ? 0.035 : 0.06);
+      if (bar === 3 && s === 15) bass(t, ROOTS[bar] * 2);
+      if (full && (s === 4 || s === 12)) clap(t);
+      if (full && (s === 3 || s === 10)) stab(t, ROOTS[bar] * 4, (loop % 4) / 3);
+    }
+    function tick() {
+      while (next < ctx.currentTime + 0.12) {
+        schedule(step, next);
+        next += s16; step = (step + 1) % 64;
+        if (step === 0) loop++;
+      }
+    }
+    function start() {
+      if (!ctx) setup();
+      ctx.resume();
+      const t = ctx.currentTime;
+      next = t + 0.06; step = 0; loop = 0; kicks.length = 0;
+      out.gain.cancelScheduledValues(t); out.gain.setValueAtTime(out.gain.value, t); out.gain.linearRampToValueAtTime(0.55, t + 0.4);
+      clearInterval(timer); timer = setInterval(tick, 25); tick();
+      on = true;
+    }
+    function stop() {
+      if (!ctx) return;
+      on = false; clearInterval(timer);
+      const t = ctx.currentTime;
+      out.gain.cancelScheduledValues(t); out.gain.setValueAtTime(out.gain.value, t); out.gain.linearRampToValueAtTime(0, t + 0.3);
+    }
+    function kickLevel() {
+      if (!on) return 0;
+      const now = ctx.currentTime;
+      while (kicks.length > 1 && kicks[1] <= now) kicks.shift();
+      const k = kicks[0];
+      return k == null || k > now ? 0 : Math.exp(-(now - k) * 8);
+    }
+    function spectrum() { if (!on) return null; analyser.getByteFrequencyData(data); return data; }
+    return { start, stop, kickLevel, spectrum, get on() { return on; } };
+  })();
+
+  function setupSound() {
+    const btn = $("#soundBtn"), label = $("#soundLabel");
+    const set = (on) => {
+      document.body.classList.toggle("playing", on);
+      btn.setAttribute("aria-pressed", on);
+      label.textContent = on ? "Sound on" : "Play";
+    };
+    btn.addEventListener("click", () => {
+      if (Sound.on) { Sound.stop(); set(false); } else { Sound.start(); set(true); }
+    });
+    document.addEventListener("visibilitychange", () => { if (document.hidden && Sound.on) { Sound.stop(); set(false); } });
+  }
+
+  /* ===================== ANIMACIONES ===================== */
+  const tickers = [];
+  const frame = (t) => { tickers.forEach((f) => f(t)); requestAnimationFrame(frame); };
+
+  // Nivel del bombo -> variable CSS --kick (0..1) para que todo lata
+  let kick = 0;
+  tickers.push(() => {
+    kick = Sound.kickLevel();
+    root.style.setProperty("--kick", kick.toFixed(3));
+  });
+
+  const SCRAMBLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#/\\_-=+*<>";
+  function scramble(el) {
+    const final = el.textContent, start = performance.now(), dur = 750;
+    const step = (t) => {
+      const p = Math.min((t - start) / dur, 1), n = Math.floor(p * final.length);
+      el.textContent = final.slice(0, n) + [...final.slice(n)].map((c) => (c === " " ? " " : SCRAMBLE[(Math.random() * SCRAMBLE.length) | 0])).join("");
+      if (p < 1) requestAnimationFrame(step); else el.textContent = final;
+    };
+    requestAnimationFrame(step);
+  }
+
   function setupReveal() {
     const io = new IntersectionObserver((entries) => entries.forEach((e) => {
       if (!e.isIntersecting) return;
-      e.target.classList.add("in");
-      const n = e.target.querySelector("[data-count]");
+      const el = e.target;
+      el.classList.add("in");
+      const n = el.querySelector("[data-count]");
       if (n) countUp(n);
-      io.unobserve(e.target);
+      if (el.matches(".section-head") && !reduceMotion) scramble($("h2", el));
+      io.unobserve(el);
     }), { threshold: 0.15 });
-    document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+    $$(".reveal").forEach((el) => io.observe(el));
   }
 
   function countUp(el) {
     const target = +el.dataset.count, suffix = el.dataset.suffix, t0 = performance.now(), dur = 1800;
     const step = (t) => {
-      const p = Math.min((t - t0) / dur, 1), v = Math.round(target * (1 - Math.pow(1 - p, 4)));
-      el.textContent = v + suffix;
+      const p = Math.min((t - t0) / dur, 1);
+      el.textContent = Math.round(target * (1 - Math.pow(1 - p, 4))) + suffix;
       if (p < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
   }
 
   function setupNav() {
-    const nav = $("#nav");
-    addEventListener("scroll", () => nav.classList.toggle("scrolled", scrollY > 40), { passive: true });
+    const nav = $("#nav"), bar = $("#progress");
+    const onScroll = () => {
+      nav.classList.toggle("scrolled", scrollY > 40);
+      const max = document.documentElement.scrollHeight - innerHeight;
+      bar.style.transform = `scaleX(${max > 0 ? scrollY / max : 0})`;
+    };
+    addEventListener("scroll", onScroll, { passive: true }); onScroll();
     $("#navToggle").onclick = () => nav.classList.toggle("open");
     $("#navLinks").onclick = (e) => { if (e.target.tagName === "A") nav.classList.remove("open"); };
   }
 
-  function setupCursorAndParallax() {
-    const glow = $("#cursorGlow"), bg = $("#heroBg"), logo = $("#heroLogo"), person = $("#heroPerson");
-    let mx = innerWidth / 2, my = innerHeight / 2, gx = mx, gy = my;
-    addEventListener("pointermove", (e) => { mx = e.clientX; my = e.clientY; });
-    const loop = () => {
+  function setupPointer() {
+    const glow = $("#cursorGlow"), ring = $("#cursorRing"), bg = $("#heroBg"), logo = $("#heroLogo"), person = $("#heroPerson");
+    const banner = $("#bannerImg");
+    let mx = innerWidth / 2, my = innerHeight / 2, gx = mx, gy = my, rx = mx, ry = my;
+    addEventListener("pointermove", (e) => { mx = e.clientX; my = e.clientY; ring.classList.add("on"); });
+    document.addEventListener("pointerleave", () => ring.classList.remove("on"));
+    document.addEventListener("pointerover", (e) => ring.classList.toggle("hover", !!e.target.closest("a, button, figure")));
+    tickers.push(() => {
       gx += (mx - gx) * 0.12; gy += (my - gy) * 0.12;
-      glow.style.left = gx + "px"; glow.style.top = gy + "px";
-      const dx = (mx / innerWidth - 0.5), dy = (my / innerHeight - 0.5);
+      rx += (mx - rx) * 0.25; ry += (my - ry) * 0.25;
+      glow.style.transform = `translate(${gx - 250}px, ${gy - 250}px)`;
+      ring.style.transform = `translate(${rx}px, ${ry}px) translate(-50%, -50%) scale(${1 + kick * 0.5})`;
+      const dx = mx / innerWidth - 0.5, dy = my / innerHeight - 0.5;
       const sy = Math.min(scrollY, innerHeight);
       bg.style.transform = `translate(${dx * -20}px, ${dy * -20 + sy * 0.3}px) scale(1.05)`;
       logo.style.transform = `translate(${dx * 18}px, ${dy * 14 - sy * 0.15}px) rotateX(${dy * -8}deg) rotateY(${dx * 8}deg)`;
       person.style.transform = `translate(calc(-50% + ${dx * -10}px), ${sy * 0.12}px)`;
-      requestAnimationFrame(loop);
-    };
-    loop();
-    document.querySelectorAll(".tilt").forEach((el) => {
+      if (!banner.parentElement.hidden && banner.firstChild) {
+        const r = banner.parentElement.getBoundingClientRect();
+        if (r.bottom > 0 && r.top < innerHeight) banner.firstChild.style.transform = `translateY(${((r.top + r.height / 2) / innerHeight - 0.5) * -70}px) scale(1.14)`;
+      }
+    });
+
+    // Inclinación 3D (propiedad "rotate", independiente de las demás animaciones)
+    $$(".tilt").forEach((el) => {
       el.addEventListener("pointermove", (e) => {
         const r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
-        el.style.transform = `perspective(900px) rotateY(${x * 10}deg) rotateX(${y * -10}deg)`;
+        const a = Math.hypot(x, y) * 16;
+        el.style.rotate = a < 0.05 ? "none" : `${-y} ${x} 0 ${a}deg`;
       });
-      el.addEventListener("pointerleave", () => (el.style.transform = ""));
+      el.addEventListener("pointerleave", () => (el.style.rotate = ""));
+    });
+
+    // Botones magnéticos
+    $$(".magnetic, .sound-btn").forEach((el) => {
+      el.addEventListener("pointermove", (e) => {
+        const r = el.getBoundingClientRect();
+        el.style.translate = `${(e.clientX - r.left - r.width / 2) * 0.25}px ${(e.clientY - r.top - r.height / 2) * 0.35}px`;
+      });
+      el.addEventListener("pointerleave", () => (el.style.translate = ""));
     });
   }
 
   function setupParticles() {
-    const cv = $("#particles"), ctx = cv.getContext("2d");
+    const cv = $("#particles"), ctx = cv.getContext("2d"), dpr = Math.min(devicePixelRatio, 2);
     let W, H, pts;
     const resize = () => {
-      W = cv.width = innerWidth * devicePixelRatio; H = cv.height = innerHeight * devicePixelRatio;
+      W = cv.width = innerWidth * dpr; H = cv.height = innerHeight * dpr;
       cv.style.width = innerWidth + "px"; cv.style.height = innerHeight + "px";
       const n = Math.min(90, Math.floor(innerWidth / 16));
       pts = Array.from({ length: n }, () => ({ x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3, r: Math.random() * 1.6 + 0.4 }));
     };
     resize(); addEventListener("resize", resize);
-    const link = 130 * devicePixelRatio;
-    const draw = () => {
+    const link = 130 * dpr;
+    tickers.push(() => {
       ctx.clearRect(0, 0, W, H);
+      const m = 1 + kick * 6;
       for (const p of pts) {
-        p.x = (p.x + p.vx + W) % W; p.y = (p.y + p.vy + H) % H;
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.r * devicePixelRatio, 0, 7); ctx.fillStyle = "rgba(169,212,255,.6)"; ctx.fill();
+        p.x = (p.x + p.vx * m + W) % W; p.y = (p.y + p.vy * m + H) % H;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r * dpr * (1 + kick * 0.8), 0, 7);
+        ctx.fillStyle = `rgba(169,212,255,${0.55 + kick * 0.4})`; ctx.fill();
       }
+      ctx.lineWidth = dpr * 0.6;
       for (let i = 0; i < pts.length; i++) for (let j = i + 1; j < pts.length; j++) {
         const a = pts[i], b = pts[j], d = Math.hypot(a.x - b.x, a.y - b.y);
-        if (d < link) { ctx.strokeStyle = `rgba(77,163,255,${(1 - d / link) * 0.18})`; ctx.lineWidth = devicePixelRatio * 0.6; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
+        if (d < link) {
+          ctx.strokeStyle = `rgba(77,163,255,${(1 - d / link) * (0.18 + kick * 0.3)})`;
+          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+        }
       }
-      requestAnimationFrame(draw);
-    };
-    draw();
+    });
   }
 
-  // Ecualizador sincronizado al BPM
+  // Ecualizador: simulado al BPM, o espectro real cuando suena la música
   function setupEQ() {
-    const cv = $("#eq"), ctx = cv.getContext("2d");
-    const beatMs = 60000 / (C.artist.bpm || 128);
-    let W, H, bars;
-    const resize = () => { W = cv.width = cv.offsetWidth * devicePixelRatio; H = cv.height = cv.offsetHeight * devicePixelRatio; bars = Math.floor(cv.offsetWidth / 9); };
+    const cv = $("#eq"), ctx = cv.getContext("2d"), dpr = Math.min(devicePixelRatio, 2);
+    const beatMs = 60000 / BPM;
+    let W, H, bars, visible = true;
+    const resize = () => { W = cv.width = cv.offsetWidth * dpr; H = cv.height = cv.offsetHeight * dpr; bars = Math.floor(cv.offsetWidth / 9); };
     resize(); addEventListener("resize", resize);
+    new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(cv);
     const seeds = Array.from({ length: 400 }, () => Math.random());
-    const draw = (t) => {
+    tickers.push((t) => {
+      if (!visible) return;
       ctx.clearRect(0, 0, W, H);
-      const phase = (t % beatMs) / beatMs, kick = Math.pow(1 - phase, 3);
+      const spec = Sound.spectrum();
+      const phase = (t % beatMs) / beatMs, sim = Math.pow(1 - phase, 3);
       const bw = W / bars;
       const grad = ctx.createLinearGradient(0, H, 0, 0);
-      grad.addColorStop(0, "rgba(31,111,235,.9)"); grad.addColorStop(0.6, "rgba(77,163,255,.5)"); grad.addColorStop(1, "rgba(169,212,255,.1)");
+      grad.addColorStop(0, "rgba(31,111,235,.95)"); grad.addColorStop(0.6, "rgba(77,163,255,.55)"); grad.addColorStop(1, "rgba(169,212,255,.15)");
       ctx.fillStyle = grad;
       for (let i = 0; i < bars; i++) {
-        const x = i / bars, center = 1 - Math.abs(x - 0.5) * 1.6;
-        const wave = 0.5 + 0.5 * Math.sin(t / 380 + i * 0.35 + seeds[i] * 6) * Math.cos(t / 900 + i * 0.12);
-        const h = H * Math.max(0.04, (0.15 + wave * 0.45 + kick * 0.4 * (x < 0.25 || x > 0.75 ? 1.3 : 0.7)) * Math.max(center, 0.25));
+        const x = i / bars;
+        let h;
+        if (spec) {
+          const d = Math.abs(x - 0.5) * 2;
+          const bin = 1 + Math.floor(d * spec.length * 0.42);
+          h = H * Math.max(0.03, (spec[bin] / 255) * (0.75 + seeds[i] * 0.25));
+        } else {
+          const center = 1 - Math.abs(x - 0.5) * 1.6;
+          const wave = 0.5 + 0.5 * Math.sin(t / 380 + i * 0.35 + seeds[i] * 6) * Math.cos(t / 900 + i * 0.12);
+          h = H * Math.max(0.04, (0.15 + wave * 0.45 + sim * 0.4 * (x < 0.25 || x > 0.75 ? 1.3 : 0.7)) * Math.max(center, 0.25));
+        }
         ctx.fillRect(i * bw + bw * 0.2, H - h, bw * 0.6, h);
       }
-      requestAnimationFrame(draw);
-    };
-    requestAnimationFrame(draw);
+    });
   }
 
   function setupLightbox() {
-    const lb = $("#lightbox"), img = $("img", lb), dl = $(".lb-download", lb);
+    const lb = $("#lightbox"), img = $("img", lb), dl = $(".lb-download", lb), count = $(".lb-count", lb);
+    let idx = 0;
+    const show = (i) => {
+      idx = (i + galleryList.length) % galleryList.length;
+      img.src = dl.href = galleryList[idx];
+      count.textContent = `${idx + 1} / ${galleryList.length}`;
+    };
+    const close = () => { lb.classList.remove("open"); lb.setAttribute("aria-hidden", "true"); };
     $("#gallery").addEventListener("click", (e) => {
-      const fig = e.target.closest("figure[data-src]");
+      const fig = e.target.closest("figure[data-i]");
       if (!fig) return;
-      img.src = dl.href = fig.dataset.src;
-      lb.classList.add("open");
+      show(+fig.dataset.i);
+      lb.classList.add("open"); lb.setAttribute("aria-hidden", "false");
     });
-    lb.addEventListener("click", (e) => { if (e.target !== img && e.target !== dl) lb.classList.remove("open"); });
-    addEventListener("keydown", (e) => { if (e.key === "Escape") lb.classList.remove("open"); });
+    $(".lb-prev", lb).onclick = (e) => { e.stopPropagation(); show(idx - 1); };
+    $(".lb-next", lb).onclick = (e) => { e.stopPropagation(); show(idx + 1); };
+    lb.addEventListener("click", (e) => { if (e.target === lb || e.target.classList.contains("lb-close")) close(); });
+    addEventListener("keydown", (e) => {
+      if (!lb.classList.contains("open")) return;
+      if (e.key === "Escape") close();
+      if (e.key === "ArrowLeft") show(idx - 1);
+      if (e.key === "ArrowRight") show(idx + 1);
+    });
+    let sx = null; // deslizar en móvil
+    lb.addEventListener("touchstart", (e) => (sx = e.touches[0].clientX), { passive: true });
+    lb.addEventListener("touchend", (e) => {
+      if (sx == null) return;
+      const dx = e.changedTouches[0].clientX - sx;
+      if (Math.abs(dx) > 50) show(idx + (dx < 0 ? 1 : -1));
+      sx = null;
+    });
   }
 
   async function init() {
     await renderLogos();
     await Promise.all([renderHero(), renderBio(), renderGallery(), renderBanner()]);
     renderMusic(); renderEvents(); renderContact();
-    setupNav(); setupLightbox(); setupReveal();
-    if (!reduceMotion) { setupParticles(); setupEQ(); setupCursorAndParallax(); }
+    finalizeLayout();
+    setupNav(); setupLightbox(); setupReveal(); setupSound();
+    if (!reduceMotion) {
+      setupParticles(); setupEQ();
+      if (finePointer) setupPointer();
+    }
+    requestAnimationFrame(frame);
     setTimeout(() => { $("#loader").classList.add("done"); document.body.classList.remove("loading"); }, reduceMotion ? 0 : 1300);
   }
   init();
