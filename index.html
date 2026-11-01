@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Press Kit · DJ</title>
+  <meta name="description" content="Press kit oficial: bio, música, fotos, rider técnico y contacto para booking.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Unbounded:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="loader" id="loader">
+    <div class="loader-logo" id="loaderLogo"></div>
+    <div class="loader-bar"><span></span></div>
+  </div>
+
+  <canvas id="particles" aria-hidden="true"></canvas>
+  <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="nav" id="nav">
+    <a href="#top" class="nav-logo" id="navLogo"></a>
+    <nav class="nav-links" id="navLinks">
+      <a href="#bio">Bio</a>
+      <a href="#music">Música</a>
+      <a href="#photos">Fotos</a>
+      <a href="#events">Eventos</a>
+      <a href="#rider">Rider</a>
+      <a href="#contact" class="nav-cta">Booking</a>
+    </nav>
+    <button class="nav-toggle" id="navToggle" aria-label="Menú"><span></span><span></span></button>
+  </header>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-bg" id="heroBg"></div>
+      <div class="hero-rings" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div class="hero-content">
+        <p class="eyebrow reveal">Official Press Kit</p>
+        <div class="hero-logo" id="heroLogo"></div>
+        <p class="hero-tagline reveal" id="tagline"></p>
+        <div class="hero-genres reveal" id="genres"></div>
+        <div class="hero-actions reveal">
+          <a href="#contact" class="btn btn-primary">Contratar</a>
+          <a href="#music" class="btn btn-ghost">Escuchar</a>
+        </div>
+      </div>
+      <canvas class="eq" id="eq" aria-hidden="true"></canvas>
+      <div class="scroll-hint" aria-hidden="true"><span></span></div>
+    </section>
+
+    <!-- MARQUEE -->
+    <div class="marquee" aria-hidden="true"><div class="marquee-track" id="marquee"></div></div>
+
+    <!-- BIO -->
+    <section class="section" id="bio">
+      <div class="section-head reveal"><span class="num">01</span><h2>Bio</h2></div>
+      <div class="bio-grid">
+        <div class="bio-photo reveal tilt" id="bioPhoto"></div>
+        <div class="bio-text">
+          <p class="bio-short reveal" id="bioShort"></p>
+          <div id="bioLong"></div>
+          <p class="bio-location reveal" id="location"></p>
+        </div>
+      </div>
+      <div class="stats" id="stats"></div>
+    </section>
+
+    <!-- MUSIC -->
+    <section class="section" id="music">
+      <div class="section-head reveal"><span class="num">02</span><h2>Música</h2></div>
+      <div class="music-grid" id="musicGrid"></div>
+    </section>
+
+    <!-- PHOTOS -->
+    <section class="section" id="photos">
+      <div class="section-head reveal"><span class="num">03</span><h2>Fotos de prensa</h2></div>
+      <p class="section-sub reveal">Haz clic para ampliar. Libres de uso para promoción.</p>
+      <div class="gallery" id="gallery"></div>
+    </section>
+
+    <!-- EVENTS -->
+    <section class="section" id="events">
+      <div class="section-head reveal"><span class="num">04</span><h2>Eventos</h2></div>
+      <ul class="events" id="eventsList"></ul>
+    </section>
+
+    <!-- RIDER -->
+    <section class="section" id="rider">
+      <div class="section-head reveal"><span class="num">05</span><h2>Rider técnico</h2></div>
+      <ul class="rider" id="riderList"></ul>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="section contact" id="contact">
+      <div class="section-head reveal"><span class="num">06</span><h2>Booking &amp; contacto</h2></div>
+      <a class="contact-mail reveal" id="contactMail"></a>
+      <div class="contact-grid" id="contactGrid"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-logo" id="footerLogo"></div>
+    <p>© <span id="year"></span> · Todos los derechos reservados</p>
+  </footer>
+
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <button class="lb-close" aria-label="Cerrar">×</button>
+    <img alt="">
+    <a class="btn btn-primary lb-download" download>Descargar</a>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
