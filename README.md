@@ -3,7 +3,7 @@
 Web de press kit animada (azul, azul oscuro, gris y negro). Sin dependencias: abre `index.html` en el navegador.
 
 ## Cómo personalizarla
-1. Copia tus logos y fotos a `assets/` (mira `assets/LEEME.md` para ver los nombres).
+1. Logos en `assets/` y `assets/download/`, fotos recortadas en `assets/photos/`.
 2. Rellena tus datos en `config.js`: bio, géneros, eventos, rider, email, teléfono, Instagram, TikTok…
 3. Abre `index.html`.
 

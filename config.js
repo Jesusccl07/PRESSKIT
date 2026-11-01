@@ -12,13 +12,18 @@ window.PRESSKIT = {
     bpm: 128,                               // Velocidad del "latido" de las animaciones
   },
 
-  // Logos: si los archivos no existen, se usa un logo de texto animado.
+  // Logo (blanco, fondo transparente). Si no existe, se usa un logo de texto animado.
   logo: {
-    main: "assets/logo.png",                // Logo principal (PNG/SVG con fondo transparente)
-    icon: "assets/logo-icon.png",           // Isotipo / símbolo (opcional)
+    main: "assets/logo.webp",
+    downloads: [
+      { label: "Logo blanco (PNG)", src: "assets/download/clement-logo-blanco.png" },
+      { label: "Logo negro (PNG)",  src: "assets/download/clement-logo-negro.png" },
+    ],
   },
 
-  heroImage: "assets/hero.jpg",             // Foto grande de portada
+  // Fotos recortadas (sin fondo): se colocan sobre el fondo azul de la web
+  heroImage: "assets/photos/clement-gafas.webp",   // Portada (vertical)
+  bioImage: "assets/photos/clement-cascos.webp",   // Sección Bio
 
   bio: {
     short: "[Bio corta: 2-3 frases. Quién eres, qué pinchas y qué te hace diferente.]",
@@ -38,12 +43,10 @@ window.PRESSKIT = {
 
   // Fotos de prensa (se pueden descargar desde la web)
   photos: [
-    "assets/photos/foto1.jpg",
-    "assets/photos/foto2.jpg",
-    "assets/photos/foto3.jpg",
-    "assets/photos/foto4.jpg",
-    "assets/photos/foto5.jpg",
-    "assets/photos/foto6.jpg",
+    { src: "assets/photos/clement-cascos.webp",          wide: true },
+    { src: "assets/photos/clement-gafas.webp" },
+    { src: "assets/photos/clement-brazos-cruzados.webp" },
+    { src: "assets/photos/clement-sentado.webp" },
   ],
 
   // Música: pega URLs de embed (SoundCloud / Spotify / YouTube / Mixcloud)

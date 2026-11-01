@@ -21,20 +21,19 @@
 
   async function renderLogos() {
     const hasLogo = await probe(C.logo.main);
-    const hasIcon = await probe(C.logo.icon);
     const alt = esc(C.artist.name);
     const main = (cls = "") => hasLogo ? `<img src="${C.logo.main}" alt="${alt}" class="${cls}">` : textLogo(cls);
-    $("#heroLogo").innerHTML = `${main("logo-layer logo-main")}${main("logo-layer logo-glitch g1")}${main("logo-layer logo-glitch g2")}`;
+    // Capa de brillo recortada con la forma del logo
+    const shine = hasLogo ? `<div class="logo-layer logo-shine" style="--logo:url('${C.logo.main}')"></div>` : "";
+    $("#heroLogo").innerHTML = `<div class="logo-stack">${main("logo-layer logo-main")}${main("logo-layer logo-glitch g1")}${main("logo-layer logo-glitch g2")}${shine}</div>`;
     $("#loaderLogo").innerHTML = main();
-    $("#navLogo").innerHTML = hasIcon ? `<img src="${C.logo.icon}" alt="${alt}">` : main();
+    $("#navLogo").innerHTML = main();
     $("#footerLogo").innerHTML = main();
   }
 
   async function renderHero() {
     if (await probe(C.heroImage)) {
-      const bg = $("#heroBg");
-      bg.style.backgroundImage = `url("${C.heroImage}")`;
-      bg.classList.add("has-img");
+      $("#heroPerson").innerHTML = `<img src="${C.heroImage}" alt="${esc(C.artist.name)}">`;
     }
     $("#tagline").textContent = C.artist.tagline;
     $("#genres").innerHTML = C.artist.genres.map((g) => `<span class="chip">${esc(g)}</span>`).join("");
@@ -47,7 +46,7 @@
     $("#bioShort").textContent = C.bio.short;
     $("#bioLong").innerHTML = C.bio.long.map((p, i) => `<p class="reveal" style="--d:${i * 0.1}s">${esc(p)}</p>`).join("");
     $("#location").textContent = `◉ ${C.artist.location}`;
-    const photo = C.photos[0];
+    const photo = C.bioImage;
     $("#bioPhoto").innerHTML = (await probe(photo)) ? `<img src="${photo}" alt="${esc(C.artist.name)}">` : `<div class="ph">Tu foto<br>${esc(photo)}</div>`;
     $("#stats").innerHTML = C.stats.map((s, i) =>
       `<div class="stat reveal" style="--d:${i * 0.1}s"><strong data-count="${s.value}" data-suffix="${esc(s.suffix)}">0${esc(s.suffix)}</strong><span>${esc(s.label)}</span></div>`).join("");
@@ -64,10 +63,16 @@
   }
 
   async function renderGallery() {
-    const ok = await Promise.all(C.photos.map(probe));
-    $("#gallery").innerHTML = C.photos.map((src, i) => ok[i]
-      ? `<figure class="reveal" style="--d:${(i % 3) * 0.1}s" data-src="${src}"><img src="${src}" alt="Foto de prensa ${i + 1}" loading="lazy"></figure>`
-      : `<figure class="reveal" style="--d:${(i % 3) * 0.1}s"><div class="ph">Foto ${i + 1}<br>${esc(src)}</div></figure>`).join("");
+    const ok = await Promise.all(C.photos.map((p) => probe(p.src)));
+    const figs = C.photos.map((p, i) => {
+      const cls = `reveal${p.wide ? " wide" : ""}`, d = `--d:${(i % 3) * 0.1}s`;
+      return ok[i]
+        ? `<figure class="${cls}" style="${d}" data-src="${p.src}"><img src="${p.src}" alt="${esc(C.artist.name)} · foto de prensa ${i + 1}" loading="lazy"></figure>`
+        : `<figure class="${cls}" style="${d}"><div class="ph">Foto ${i + 1}<br>${esc(p.src)}</div></figure>`;
+    }).join("");
+    const dls = (C.logo.downloads || []).map((l) => `<a class="btn btn-ghost" href="${l.src}" download>↓ ${esc(l.label)}</a>`).join("");
+    const card = dls ? `<div class="dl-card reveal" style="--d:.2s"><div class="dl-logo"><img src="${C.logo.main}" alt=""></div><p>Logos en alta calidad para carteles y flyers</p>${dls}</div>` : "";
+    $("#gallery").innerHTML = figs + card;
   }
 
   function renderEvents() {
@@ -143,7 +148,7 @@
   }
 
   function setupCursorAndParallax() {
-    const glow = $("#cursorGlow"), bg = $("#heroBg"), logo = $("#heroLogo");
+    const glow = $("#cursorGlow"), bg = $("#heroBg"), logo = $("#heroLogo"), person = $("#heroPerson");
     let mx = innerWidth / 2, my = innerHeight / 2, gx = mx, gy = my;
     addEventListener("pointermove", (e) => { mx = e.clientX; my = e.clientY; });
     const loop = () => {
@@ -152,7 +157,8 @@
       const dx = (mx / innerWidth - 0.5), dy = (my / innerHeight - 0.5);
       const sy = Math.min(scrollY, innerHeight);
       bg.style.transform = `translate(${dx * -20}px, ${dy * -20 + sy * 0.3}px) scale(1.05)`;
-      logo.style.transform = `translate(${dx * 14}px, ${dy * 14}px) rotateX(${dy * -8}deg) rotateY(${dx * 8}deg)`;
+      logo.style.transform = `translate(${dx * 18}px, ${dy * 14 - sy * 0.15}px) rotateX(${dy * -8}deg) rotateY(${dx * 8}deg)`;
+      person.style.transform = `translate(calc(-50% + ${dx * -10}px), ${sy * 0.12}px)`;
       requestAnimationFrame(loop);
     };
     loop();
@@ -235,7 +241,7 @@
     renderMusic(); renderEvents(); renderContact();
     setupNav(); setupLightbox(); setupReveal();
     if (!reduceMotion) { setupParticles(); setupEQ(); setupCursorAndParallax(); }
-    setTimeout(() => { $("#loader").classList.add("done"); document.body.classList.remove("loading"); }, reduceMotion ? 0 : 1100);
+    setTimeout(() => { $("#loader").classList.add("done"); document.body.classList.remove("loading"); }, reduceMotion ? 0 : 1300);
   }
   init();
 })();
