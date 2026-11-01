@@ -92,7 +92,7 @@
     }
     if (!stats.length) $("#stats").hidden = true;
     else $("#stats").innerHTML = stats.map((s, i) =>
-      `<div class="stat reveal" style="--d:${i * 0.1}s"><strong data-count="${+s.value}" data-suffix="${esc(s.suffix)}">0${esc(s.suffix)}</strong><span>${esc(s.label)}</span></div>`).join("");
+      `<div class="stat neon-card reveal" style="--d:${i * 0.1}s"><strong data-count="${+s.value}" data-suffix="${esc(s.suffix)}">0${esc(s.suffix)}</strong><span>${esc(s.label)}</span></div>`).join("");
   }
 
   async function renderBanner() {
@@ -113,13 +113,16 @@
     const ok = await Promise.all(C.photos.map((p) => probe(p.src)));
     const photos = C.photos.filter((_, i) => ok[i]);
     galleryList = photos.map((p) => p.src);
-    const figs = photos.map((p, i) =>
-      `<figure class="reveal tilt${p.wide ? " wide" : ""}" style="--d:${(i % 3) * 0.1}s" data-i="${i}"><img src="${p.src}" alt="${esc(C.artist.name)} · foto de prensa ${i + 1}" loading="lazy"></figure>`).join("");
+    if (photos.length) {
+      $("#sliderStage").innerHTML = photos.map((p, i) =>
+        `<figure class="slide${p.wide ? " wide" : ""}" data-i="${i}"><img src="${p.src}" alt="${esc(C.artist.name)} · foto de prensa ${i + 1}" draggable="false"></figure>`).join("");
+      $("#sliderDots").innerHTML = photos.map((_, i) => `<button aria-label="Foto ${i + 1}" data-i="${i}"><span></span></button>`).join("");
+    } else $("#slider").remove();
     const dls = (C.logo.downloads || []).map((l) =>
       `<a class="btn ${l.primary ? "btn-primary" : "btn-ghost"} magnetic" href="${l.src}" download>↓ ${esc(l.label)}</a>`).join("");
-    const card = dls ? `<div class="dl-card reveal" style="--d:.2s"><div class="dl-logo">${logoHTML()}</div><div class="dl-body"><p>Logos y fotos en alta calidad, con fondo transparente, para carteles y flyers.</p><div class="dl-btns">${dls}</div></div></div>` : "";
-    if (!figs && !card) return hideSection("photos");
-    $("#gallery").innerHTML = figs + card;
+    const card = dls ? `<div class="dl-card neon-card reveal" style="--d:.2s"><div class="dl-logo">${logoHTML()}</div><div class="dl-body"><p>Logos y fotos en alta calidad, con fondo transparente, para carteles y flyers. Incluye ficha en PDF para promotores.</p><div class="dl-btns">${dls}</div></div></div>` : "";
+    if (!photos.length && !card) return hideSection("photos");
+    $("#gallery").innerHTML = card;
   }
 
   function renderEvents() {
@@ -136,7 +139,7 @@
     const rider = real(C.rider);
     if (!rider.length) hideSection("rider");
     else $("#riderList").innerHTML = rider.map((r, i) =>
-      `<li class="reveal" style="--d:${i * 0.08}s"><b>${String(i + 1).padStart(2, "0")}</b><span>${esc(r)}</span></li>`).join("");
+      `<li class="neon-card reveal" style="--d:${i * 0.08}s"><b>${String(i + 1).padStart(2, "0")}</b><span>${esc(r)}</span></li>`).join("");
   }
 
   const ICONS = {
@@ -163,12 +166,45 @@
     // Si el email ya sale en grande, no se repite en tarjeta
     const cards = mail.isConnected ? items.filter(([icon]) => icon !== "mail") : items;
     $("#contactGrid").innerHTML = cards.map(([icon, label, value, href], i) =>
-      `<a class="contact-card reveal" style="--d:${i * 0.06}s" href="${esc(href)}"${linkAttrs(href)}>
+      `<a class="contact-card neon-card reveal" style="--d:${i * 0.06}s" href="${esc(href)}"${linkAttrs(href)}>
         <svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[icon]}</svg><div><small>${label}</small><span>${esc(value)}</span></div></a>`).join("");
+
+    setupBookingForm();
 
     const social = items.filter(([icon]) => !["phone", "mail"].includes(icon));
     $("#footerSocial").innerHTML = social.map(([icon, label, , href]) =>
       `<a href="${esc(href)}"${linkAttrs(href)} aria-label="${label}"><svg viewBox="0 0 24 24">${ICONS[icon]}</svg></a>`).join("");
+  }
+
+  // Formulario de booking: abre WhatsApp o el email con el mensaje ya escrito
+  function setupBookingForm() {
+    const k = C.contact, form = $("#bookingForm"), err = $("#formError");
+    const hasWa = !isPh(k.whatsapp), hasMail = !isPh(k.bookingEmail);
+    if (!hasWa && !hasMail) return form.remove();
+    $("#formActions").innerHTML =
+      (hasWa ? `<button type="submit" class="btn btn-primary magnetic" data-via="wa">Enviar por WhatsApp</button>` : "") +
+      (hasMail ? `<button type="submit" class="btn btn-ghost magnetic" data-via="mail">Enviar por email</button>` : "");
+    let via = hasWa ? "wa" : "mail";
+    $$("#formActions button").forEach((b) => b.addEventListener("click", () => (via = b.dataset.via)));
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const f = Object.fromEntries(new FormData(form));
+      if (!f.nombre.trim() || !f.evento.trim()) { err.textContent = "Pon al menos tu nombre y la sala o evento."; return; }
+      err.textContent = "";
+      const fecha = f.fecha ? new Date(f.fecha + "T12:00").toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" }) : "";
+      const lines = [
+        `Hola ${C.artist.name}, quiero contratarte.`, "",
+        `Nombre: ${f.nombre.trim()}`, `Sala / evento: ${f.evento.trim()}`,
+        f.ciudad.trim() && `Ciudad: ${f.ciudad.trim()}`, fecha && `Fecha: ${fecha}`,
+        f.mensaje.trim() && `\n${f.mensaje.trim()}`,
+      ].filter((l) => l !== "" && l !== false);
+      lines.splice(1, 0, "");
+      const text = lines.join("\n");
+      const url = via === "wa"
+        ? `https://wa.me/${k.whatsapp}?text=${encodeURIComponent(text)}`
+        : `mailto:${k.bookingEmail}?subject=${encodeURIComponent(`Booking ${C.artist.name}${fecha ? " · " + fecha : ""}`)}&body=${encodeURIComponent(text)}`;
+      window.open(url, via === "wa" ? "_blank" : "_self");
+    });
   }
 
   // Numera solo las secciones visibles y oculta del menú las que no hay
@@ -460,6 +496,70 @@
     });
   }
 
+  /* Slider 3D (coverflow): autoplay, arrastrar, flechas, puntos y teclado */
+  let openLightbox = () => {};
+  function setupSlider() {
+    const slider = $("#slider");
+    if (!slider) return;
+    const slides = $$(".slide", slider), dots = $$(".slider-dots button", slider), n = slides.length;
+    let cur = 0, timer = null, hover = false, visible = false;
+    const AUTOPLAY = 4500;
+    const render = () => {
+      slides.forEach((s, i) => {
+        let o = i - cur;
+        if (o > n / 2) o -= n;
+        if (o < -n / 2) o += n;
+        const a = Math.abs(o);
+        s.style.setProperty("--o", o);
+        s.style.setProperty("--a", a);
+        s.style.zIndex = 20 - a;
+        s.classList.toggle("active", o === 0);
+        s.style.opacity = a > 2 ? 0 : 1;
+        s.style.pointerEvents = a > 2 ? "none" : "auto";
+        s.setAttribute("aria-hidden", o !== 0);
+      });
+      dots.forEach((d, i) => d.classList.toggle("on", i === cur));
+      slider.style.setProperty("--autoplay", `${AUTOPLAY}ms`);
+    };
+    const go = (i) => { cur = (i + n) % n; render(); restart(); };
+    const restart = () => {
+      clearTimeout(timer);
+      dots.forEach((d) => d.classList.remove("run"));
+      if (hover || !visible || reduceMotion) return;
+      void slider.offsetWidth;
+      dots[cur]?.classList.add("run");
+      timer = setTimeout(() => go(cur + 1), AUTOPLAY);
+    };
+    $(".prev", slider).onclick = () => go(cur - 1);
+    $(".next", slider).onclick = () => go(cur + 1);
+    dots.forEach((d) => (d.onclick = () => go(+d.dataset.i)));
+    slider.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") go(cur - 1);
+      if (e.key === "ArrowRight") go(cur + 1);
+      if (e.key === "Enter") openLightbox(cur);
+    });
+    slider.addEventListener("pointerenter", (e) => { if (e.pointerType === "mouse") { hover = true; restart(); } });
+    slider.addEventListener("pointerleave", () => { hover = false; restart(); });
+    new IntersectionObserver(([e]) => { visible = e.isIntersecting; restart(); }, { threshold: 0.3 }).observe(slider);
+
+    // Arrastrar / deslizar
+    let sx = null, moved = false;
+    const stage = $("#sliderStage");
+    stage.addEventListener("pointerdown", (e) => { sx = e.clientX; moved = false; });
+    addEventListener("pointerup", (e) => {
+      if (sx == null) return;
+      const dx = e.clientX - sx; sx = null;
+      if (Math.abs(dx) > 40) { moved = true; go(cur + (dx < 0 ? 1 : -1)); }
+    });
+    stage.addEventListener("click", (e) => {
+      const s = e.target.closest(".slide");
+      if (!s || moved) return;
+      const i = +s.dataset.i;
+      if (i === cur) openLightbox(i); else go(i);
+    });
+    render();
+  }
+
   function setupLightbox() {
     const lb = $("#lightbox"), img = $("img", lb), dl = $(".lb-download", lb), count = $(".lb-count", lb);
     let idx = 0;
@@ -469,12 +569,7 @@
       count.textContent = `${idx + 1} / ${galleryList.length}`;
     };
     const close = () => { lb.classList.remove("open"); lb.setAttribute("aria-hidden", "true"); };
-    $("#gallery").addEventListener("click", (e) => {
-      const fig = e.target.closest("figure[data-i]");
-      if (!fig) return;
-      show(+fig.dataset.i);
-      lb.classList.add("open"); lb.setAttribute("aria-hidden", "false");
-    });
+    openLightbox = (i) => { show(i); lb.classList.add("open"); lb.setAttribute("aria-hidden", "false"); };
     $(".lb-prev", lb).onclick = (e) => { e.stopPropagation(); show(idx - 1); };
     $(".lb-next", lb).onclick = (e) => { e.stopPropagation(); show(idx + 1); };
     lb.addEventListener("click", (e) => { if (e.target === lb || e.target.classList.contains("lb-close")) close(); });
@@ -499,13 +594,52 @@
     await Promise.all([renderHero(), renderBio(), renderGallery(), renderBanner()]);
     renderMusic(); renderEvents(); renderContact();
     finalizeLayout();
-    setupNav(); setupLightbox(); setupReveal(); setupSound();
+    setupNav(); setupLightbox(); setupSlider(); setupReveal(); setupSound();
     if (!reduceMotion) {
       setupParticles(); setupEQ();
-      if (finePointer) setupPointer();
+      if (finePointer) { setupPointer(); setupTrail(); }
     }
     requestAnimationFrame(frame);
-    setTimeout(() => { $("#loader").classList.add("done"); document.body.classList.remove("loading"); }, reduceMotion ? 0 : 1300);
+    finishLoader();
+  }
+
+  // Contador 00 -> 100 del loader
+  function finishLoader() {
+    const dur = reduceMotion ? 0 : 1300, t0 = performance.now(), count = $("#loaderCount"), fill = $("#loaderFill");
+    const step = (t) => {
+      const p = dur ? Math.min((t - t0) / dur, 1) : 1, v = Math.round(100 * (1 - Math.pow(1 - p, 2)));
+      count.textContent = String(v).padStart(2, "0");
+      fill.style.transform = `scaleX(${v / 100})`;
+      if (p < 1) return requestAnimationFrame(step);
+      $("#loader").classList.add("done"); document.body.classList.remove("loading");
+    };
+    requestAnimationFrame(step);
+  }
+
+  // Estela de neón que sigue al ratón
+  function setupTrail() {
+    const cv = $("#trail"), ctx = cv.getContext("2d"), dpr = Math.min(devicePixelRatio, 2);
+    const pts = [];
+    const resize = () => { cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; cv.style.width = innerWidth + "px"; cv.style.height = innerHeight + "px"; };
+    resize(); addEventListener("resize", resize);
+    addEventListener("pointermove", (e) => pts.push({ x: e.clientX * dpr, y: e.clientY * dpr, t: performance.now() }));
+    tickers.push((t) => {
+      while (pts.length && t - pts[0].t > 350) pts.shift();
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      if (pts.length < 2) return;
+      ctx.lineCap = ctx.lineJoin = "round";
+      for (const [w, col, blur] of [[7 * dpr, "rgba(31,111,235,.35)", 18], [2.2 * dpr, "rgba(200,230,255,.95)", 8]]) {
+        ctx.shadowColor = "#4da3ff"; ctx.shadowBlur = blur * dpr;
+        for (let i = 1; i < pts.length; i++) {
+          const life = 1 - (t - pts[i].t) / 350;
+          ctx.globalAlpha = Math.max(0, life);
+          ctx.lineWidth = w * (0.3 + life * 0.7 + kick * 0.6);
+          ctx.strokeStyle = col;
+          ctx.beginPath(); ctx.moveTo(pts[i - 1].x, pts[i - 1].y); ctx.lineTo(pts[i].x, pts[i].y); ctx.stroke();
+        }
+      }
+      ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+    });
   }
   init();
 })();

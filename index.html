@@ -29,13 +29,15 @@
 <body>
   <div class="loader" id="loader">
     <div class="loader-logo" id="loaderLogo"></div>
-    <div class="loader-bar"><span></span></div>
+    <div class="loader-count" id="loaderCount">00</div>
+    <div class="loader-bar"><span id="loaderFill"></span></div>
   </div>
 
   <div class="progress" id="progress" aria-hidden="true"></div>
   <canvas id="particles" aria-hidden="true"></canvas>
   <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
   <div class="cursor-ring" id="cursorRing" aria-hidden="true"></div>
+  <canvas id="trail" aria-hidden="true"></canvas>
   <div class="grain" aria-hidden="true"></div>
 
   <header class="nav" id="nav">
@@ -57,6 +59,7 @@
       <div class="hero-bg" id="heroBg"></div>
       <div class="hero-rings" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
       <div class="hero-beams" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="hero-neon" aria-hidden="true"><i></i></div>
       <div class="hero-person" id="heroPerson"></div>
       <div class="hero-flash" aria-hidden="true"></div>
       <div class="hero-content">
@@ -101,7 +104,13 @@
     <!-- PHOTOS -->
     <section class="section" id="photos">
       <div class="section-head reveal"><span class="num"></span><h2>Fotos de prensa</h2></div>
-      <p class="section-sub reveal">Fotos sin fondo, listas para carteles y flyers. Haz clic para ampliar y descargar.</p>
+      <p class="section-sub reveal">Fotos sin fondo, listas para carteles y flyers. Desliza, y toca la foto central para ampliarla y descargarla.</p>
+      <div class="slider reveal" id="slider" tabindex="0" aria-roledescription="carrusel" aria-label="Fotos de prensa">
+        <div class="slider-stage" id="sliderStage"></div>
+        <button class="slider-nav prev" aria-label="Foto anterior">‹</button>
+        <button class="slider-nav next" aria-label="Foto siguiente">›</button>
+        <div class="slider-dots" id="sliderDots"></div>
+      </div>
       <div class="gallery" id="gallery"></div>
     </section>
 
@@ -120,7 +129,22 @@
     <!-- CONTACT -->
     <section class="section contact" id="contact">
       <div class="section-head reveal"><span class="num"></span><h2>Booking &amp; contacto</h2></div>
-      <a class="contact-mail reveal" id="contactMail"></a>
+      <div class="booking reveal" id="booking">
+        <div class="booking-info">
+          <div class="neon-sign" aria-label="Booking abierto">BOOKING <b>OPEN</b></div>
+          <p>Cuéntame tu evento y te respondo lo antes posible. El mensaje se envía ya redactado por WhatsApp o por email.</p>
+          <a class="contact-mail" id="contactMail"></a>
+        </div>
+        <form class="booking-form neon-card" id="bookingForm" novalidate>
+          <label><span>Nombre</span><input name="nombre" required autocomplete="name" placeholder="Tu nombre"></label>
+          <label><span>Sala / evento</span><input name="evento" required placeholder="Nombre de la sala o evento"></label>
+          <label><span>Ciudad</span><input name="ciudad" placeholder="Ciudad"></label>
+          <label><span>Fecha</span><input name="fecha" type="date"></label>
+          <label class="full"><span>Mensaje</span><textarea name="mensaje" rows="3" placeholder="Horario, tipo de evento, aforo..."></textarea></label>
+          <div class="form-actions full" id="formActions"></div>
+          <p class="form-error full" id="formError" role="alert"></p>
+        </form>
+      </div>
       <div class="contact-grid" id="contactGrid"></div>
     </section>
   </main>

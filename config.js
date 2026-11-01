@@ -17,6 +17,7 @@ window.PRESSKIT = {
     main: "assets/logo.webp",
     downloads: [
       { label: "Press kit completo (.zip)", src: "assets/download/clement-presskit.zip", primary: true },
+      { label: "Ficha PDF", src: "assets/download/clement-onesheet.pdf" },
       { label: "Logo blanco (PNG)", src: "assets/download/clement-logo-blanco.png" },
       { label: "Logo negro (PNG)",  src: "assets/download/clement-logo-negro.png" },
     ],
