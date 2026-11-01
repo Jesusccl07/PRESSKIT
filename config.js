@@ -24,6 +24,7 @@ window.PRESSKIT = {
   // Fotos recortadas (sin fondo): se colocan sobre el fondo azul de la web
   heroImage: "assets/photos/clement-gafas.webp",   // Portada (vertical)
   bioImage: "assets/photos/clement-cascos.webp",   // Sección Bio
+  banner: "assets/photos/clement-banner.jpg",      // Banner horizontal a pantalla completa (se oculta si no existe)
 
   bio: {
     short: "[Bio corta: 2-3 frases. Quién eres, qué pinchas y qué te hace diferente.]",
@@ -47,6 +48,7 @@ window.PRESSKIT = {
     { src: "assets/photos/clement-gafas.webp" },
     { src: "assets/photos/clement-brazos-cruzados.webp" },
     { src: "assets/photos/clement-sentado.webp" },
+    { src: "assets/photos/clement-silla.webp" },
   ],
 
   // Música: pega URLs de embed (SoundCloud / Spotify / YouTube / Mixcloud)

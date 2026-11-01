@@ -52,6 +52,17 @@
       `<div class="stat reveal" style="--d:${i * 0.1}s"><strong data-count="${s.value}" data-suffix="${esc(s.suffix)}">0${esc(s.suffix)}</strong><span>${esc(s.label)}</span></div>`).join("");
   }
 
+  async function renderBanner() {
+    if (!(await probe(C.banner))) return;
+    $("#bannerImg").innerHTML = `<img src="${C.banner}" alt="${esc(C.artist.name)}">`;
+    $("#banner").hidden = false;
+    const sec = $("#banner"), img = $("#bannerImg img");
+    addEventListener("scroll", () => {
+      const r = sec.getBoundingClientRect(), p = (r.top + r.height / 2 - innerHeight / 2) / innerHeight;
+      img.style.transform = `translateY(${p * -60}px) scale(1.12)`;
+    }, { passive: true });
+  }
+
   function renderMusic() {
     const grid = $("#musicGrid");
     if (!C.music.length) {
@@ -237,7 +248,7 @@
 
   async function init() {
     await renderLogos();
-    await Promise.all([renderHero(), renderBio(), renderGallery()]);
+    await Promise.all([renderHero(), renderBio(), renderGallery(), renderBanner()]);
     renderMusic(); renderEvents(); renderContact();
     setupNav(); setupLightbox(); setupReveal();
     if (!reduceMotion) { setupParticles(); setupEQ(); setupCursorAndParallax(); }
