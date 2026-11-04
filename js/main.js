@@ -413,7 +413,7 @@
     return els;
   }
 
-  /* ===================== LOGO DE HIELO ===================== */
+  /* ===================== LOGO (cromo helado) ===================== */
   let ice = null;
   async function setupIce() {
     const box = $("#heroLogo"), canvas = $("#iceCanvas");
@@ -421,14 +421,11 @@
     const map = await probe(small ? C.iceMap?.small : C.iceMap?.large);
     if (logoImg) ice = window.IceLogo ? window.IceLogo(canvas, logoImg, map, { every: touch ? 2 : 1 }) : null;
     if (ice) box.style.setProperty("--logo-ar", ice.aspect);
-    else {
-      canvas.remove(); box.classList.add("fallback");
-      if (logoImg) box.style.setProperty("--logo-ar", logoImg.naturalWidth / logoImg.naturalHeight);
-    }
+    else { canvas.remove(); box.classList.add("fallback"); } // sin WebGL: logo blanco con el mismo halo
   }
   function logoRect() {
     const r = $("#heroLogo").getBoundingClientRect();
-    const px = ice ? ice.pad.x : 0.07, py = ice ? ice.pad.y : 0.07;
+    const px = ice ? ice.pad.x : 104 / 1508, py = ice ? ice.pad.y : 104 / 443; // zona del logo dentro del lienzo
     return { left: r.left + r.width * px, top: r.top + r.height * py, width: r.width * (1 - 2 * px), height: r.height * (1 - 2 * py) };
   }
 

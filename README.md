@@ -8,7 +8,7 @@ Web pública: **https://jesusccl07.github.io/PRESSKIT/** · en inglés: `?lang=e
   - de fondo, tu aftermovie "La noche mágica", sin sonido, desenfocado y teñido en azul
   - haces de cabezas móviles y humo en primer plano
   - tu foto etalonada, con contraluz azul calculado del borde de la silueta
-  - logo de hielo en WebGL (`js/ice.js`), con relieve, grietas, destellos y halo neón
+  - logo de cromo helado en WebGL (`js/ice.js`): metal pulido con un reflejo que sigue al ratón (o al móvil), un destello cada pocos segundos y halo azul; el borde siempre sale nítido
 - **Scroll tipo película** (GSAP + ScrollTrigger + Lenis): portada que se agrieta, frase que se enciende, cifras que cuentan, galería horizontal con suelo brillante.
 - **Sobre mí**, en primera persona.
 - **Redes:** tus 3 últimos TikToks dentro de móviles realistas, con el reproductor oficial, y tus cifras de TikTok e Instagram sumadas (seguidores, me gusta y visualizaciones).
@@ -27,8 +27,8 @@ Web pública: **https://jesusccl07.github.io/PRESSKIT/** · en inglés: `?lang=e
   - la foto de portada va directamente en el HTML y el vídeo de fondo arranca al instante (159 KB en móvil);
   - galería, "Sobre mí" y la fuente de neón se cargan cuando hacen falta.
 - **Sin cálculos pesados en el teléfono:**
-  - el etalonado de la foto, el contraluz y el relieve del hielo vienen pre-calculados (`assets/photos/*-graded/-rim.webp`, `assets/logo-ice-map*.webp`), con un mapa más pequeño para móvil;
-  - el hielo va a 30 fps en móvil y, si el teléfono va justo, baja de calidad hasta quedarse en imagen fija.
+  - el etalonado de la foto, el contraluz, el relieve del logo y su halo vienen pre-calculados (`assets/photos/*-graded/-rim.webp`, `assets/logo-ice-map*.webp`, `assets/logo-glow.webp`), con un mapa más pequeño para móvil;
+  - el logo va a 30 fps en móvil y, si el teléfono va justo, baja de calidad hasta quedarse en imagen fija.
 - **Scroll nativo en táctil** (Lenis solo con ratón) y efectos más ligeros: humo movido por la GPU, haces sin desenfoque, grano sin animar.
 - **Uso con el dedo:**
   - todo lo tocable mide al menos 44 px;
@@ -37,7 +37,7 @@ Web pública: **https://jesusccl07.github.io/PRESSKIT/** · en inglés: `?lang=e
   - avisos de "Desliza" en los carruseles;
   - márgenes para la muesca y la barra del iPhone;
   - portada recompuesta para el móvil en horizontal.
-- **En Android**, al inclinar el móvil se mueve la luz del hielo.
+- **En Android**, al inclinar el móvil se mueve el reflejo del logo.
 - **Lighthouse móvil (mediana de 3):** rendimiento 61, con el contenido principal en 2,6 s; accesibilidad, buenas prácticas y SEO al 100.
 
 ## Redes que se actualizan solas

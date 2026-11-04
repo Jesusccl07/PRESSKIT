@@ -1,7 +1,10 @@
-/* Logo de hielo en WebGL.
-   A partir del PNG del logo se crea un mapa: R = forma nítida, G = relieve (desenfoque corto),
-   B = halo (desenfoque largo). El shader calcula biselado, grietas, escarcha, reflejos tipo
-   cromo y un halo neón. La luz sigue al ratón y el bombo (kick) mete un golpe RGB. */
+/* Logo de cromo helado en WebGL.
+   A partir del PNG del logo se crea un mapa: R = forma, G = relieve (desenfoque corto),
+   B = halo (desenfoque largo). El shader pinta las letras como metal pulido y frío: reflejan
+   un "cielo" claro arriba y un suelo azul abajo, con la línea del horizonte brillante, y el
+   bisel capta la luz, que sigue al ratón (o al móvil). Cada pocos segundos pasa un destello.
+   El borde nítido lo pone una máscara CSS con el propio logo, así se ve perfecto aunque el
+   lienzo se dibuje a menos resolución. El halo azul es una imagen aparte (assets/logo-glow.webp). */
 window.IceLogo = function (canvas, img, mapImg, opts = {}) {
   const PAD = 0.08; // margen alrededor del logo (fracción del ancho del logo), para el halo
   let gl;
@@ -91,55 +94,38 @@ window.IceLogo = function (canvas, img, mapImg, opts = {}) {
   precision highp float;
   varying vec2 vUv;
   uniform sampler2D uTex;
-  uniform vec2 uTexel, uMouse;
+  uniform vec2 uMouse;
   uniform float uAspect, uTime, uKick, uOn;
-  vec2 hash2(vec2 p){ p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3))); return fract(sin(p) * 43758.5453); }
-  float hash(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }
-  float noise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
-    return mix(mix(hash(i), hash(i + vec2(1., 0.)), f.x), mix(hash(i + vec2(0., 1.)), hash(i + vec2(1., 1.)), f.x), f.y); }
-  float fbm(vec2 p){ float v = 0., a = .5; for (int i = 0; i < 4; i++){ v += a * noise(p); p *= 2.03; a *= .5; } return v; }
-  float cracks(vec2 p){
-    vec2 i = floor(p), f = fract(p); float d1 = 8., d2 = 8.;
-    for (int y = -1; y <= 1; y++) for (int x = -1; x <= 1; x++){
-      vec2 g = vec2(float(x), float(y)); vec2 r = g + hash2(i + g) - f; float d = dot(r, r);
-      if (d < d1){ d2 = d1; d1 = d; } else if (d < d2){ d2 = d; } }
-    return 1. - smoothstep(0., .045, sqrt(d2) - sqrt(d1));
-  }
+  float rel(vec2 uv){ return texture2D(uTex, uv).g; }
   void main(){
     vec2 uv = vec2(vUv.x, 1. - vUv.y);
-    float k = uKick;
-    vec2 split = vec2(uTexel.x * (1.5 + 14. * k), 0.);
-    vec4 t = texture2D(uTex, uv);
-    float a = t.r;
-    float aR = texture2D(uTex, uv + split).r, aB = texture2D(uTex, uv - split).r;
-    float hx = texture2D(uTex, uv + vec2(uTexel.x * 2., 0.)).g - texture2D(uTex, uv - vec2(uTexel.x * 2., 0.)).g;
-    float hy = texture2D(uTex, uv + vec2(0., uTexel.y * 2.)).g - texture2D(uTex, uv - vec2(0., uTexel.y * 2.)).g;
-    vec3 n = normalize(vec3(-hx * 5., hy * 5., 1.));
-    vec2 p = uv * vec2(uAspect, 1.);
-    float cr = cracks(p * 5.5 + .3) * .8 + cracks(p * 14. + 2.) * .3;
-    float frost = fbm(p * 20.);
-    vec2 m = uMouse * vec2(uAspect, 1.);
-    vec3 L = normalize(vec3(m - p, .5));
+    float cov = smoothstep(0., .4, texture2D(uTex, uv).r); // cobertura generosa: el borde lo recorta la máscara
+    if (cov <= 0.) { gl_FragColor = vec4(0.); return; }
+    // Relieve: normal del bisel, con el paso medido en el logo (igual en el mapa grande y en el pequeño)
+    vec2 e = vec2(1.5 / 1508., 1.5 / 443.);
+    float hx = rel(uv + vec2(e.x, 0.)) - rel(uv - vec2(e.x, 0.));
+    float hy = rel(uv + vec2(0., e.y)) - rel(uv - vec2(0., e.y));
+    vec3 n = normalize(vec3(-hx, hy, .22));
+    vec2 m = clamp(uMouse - .5, -.6, .6);
+    // Reflejo del entorno: claro arriba, azul profundo abajo y un horizonte brillante en medio
+    float y = (uv.y - .5) * 3.2 - n.y * 1.1 + m.y * .55 + n.x * .25;
+    float sky = 1. - smoothstep(-.035, .035, y);
+    vec3 top = mix(vec3(.6, .77, 1.), vec3(.97, .99, 1.), smoothstep(0., .9, -y));
+    vec3 bot = mix(vec3(.04, .13, .4), vec3(.3, .58, 1.), smoothstep(0., .9, y));
+    vec3 col = mix(bot, top, sky);
+    col += vec3(.8, .93, 1.) * (1. - smoothstep(0., .12, abs(y + .06))) * .55;
+    // Luz principal: da forma al bisel y deja un brillo duro donde pega
+    vec3 L = normalize(vec3(m.x * 1.8 - .3, .5 - m.y * 1.8, .8));
     float diff = max(dot(n, L), 0.);
-    float spec = pow(max(dot(reflect(-L, n), vec3(0., 0., 1.)), 0.), 34.);
-    float fres = pow(1. - n.z, 1.5);
-    vec3 r = reflect(vec3(0., 0., -1.), n);
-    float band = .5 + .5 * sin((r.x * 2. + r.y * 3. + p.x * .35) * 5. + uTime * .5);
-    vec3 deep = vec3(.07, .22, .6), ice = vec3(.8, .91, 1.);
-    vec3 col = mix(deep, ice, clamp(.45 + .42 * diff + .4 * band * fres + .16 * frost, 0., 1.));
-    col = mix(col, vec3(1.), cr * (.3 + .5 * diff));
-    col += vec3(.75, .88, 1.) * spec * 1.3;
-    // destellos: puntitos que titilan donde da la luz, como en el hielo de verdad
-    vec2 gp = p * 70.; float gh = hash(floor(gp));
-    float tw = pow(max(0., sin(uTime * (1.5 + gh * 3.) + gh * 40.)), 12.);
-    col += vec3(1.) * step(.94, gh) * tw * smoothstep(.45, 0., length(fract(gp) - .5)) * (.4 + diff) * 1.6;
-    float sweep = smoothstep(.07, 0., abs(fract(uTime * .07) * (uAspect + 2.) - 1. - (p.x - p.y * .6)));
-    col += sweep * .6;
-    col *= .94 + .55 * k;
-    vec3 aRGB = vec3(aR, a, aB);
-    float glow = t.b * (1. - a);
-    vec3 glowCol = vec3(.15, .45, 1.) * glow * (.85 + 1.3 * k);
-    gl_FragColor = vec4(col * aRGB + glowCol, max(max(aR, a), aB) + glow * .45) * uOn;
+    float spec = pow(max(dot(reflect(-L, n), vec3(0., 0., 1.)), 0.), 48.);
+    col *= .82 + .3 * diff;
+    col = mix(col, vec3(.62, .88, 1.), clamp((1. - n.z) * 1.6, 0., 1.) * .45);
+    col += vec3(.9, .97, 1.) * spec * 1.2;
+    // Destello que cruza el logo cada 7 s
+    float ph = fract(uTime / 7.), bx = mix(-.3, 1.3, smoothstep(0., .35, ph)) * uAspect;
+    col += (1. - smoothstep(0., .09, abs(bx - (uv.x * uAspect - uv.y * .6)))) * .5;
+    col *= 1. + .3 * uKick;
+    gl_FragColor = vec4(col * cov, cov) * uOn;
   }`;
   function sh(type, s) {
     const o = gl.createShader(type); gl.shaderSource(o, s); gl.compileShader(o);
@@ -168,25 +154,31 @@ window.IceLogo = function (canvas, img, mapImg, opts = {}) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   const U = {};
-  ["uTex", "uTexel", "uMouse", "uAspect", "uTime", "uKick", "uOn"].forEach((n) => (U[n] = gl.getUniformLocation(prog, n)));
+  ["uTex", "uMouse", "uAspect", "uTime", "uKick", "uOn"].forEach((n) => (U[n] = gl.getUniformLocation(prog, n)));
   gl.uniform1i(U.uTex, 0);
-  gl.uniform2f(U.uTexel, 1 / TW, 1 / TH);
   gl.uniform1f(U.uAspect, TW / TH);
+
+  // Borde nítido: máscara CSS con el logo original, encajada en la zona del logo dentro del lienzo
+  const mask = {
+    Image: `url("${img.currentSrc || img.src}")`,
+    Size: `${((1 - (2 * padPx) / TW) * 100).toFixed(3)}% ${((1 - (2 * padPx) / TH) * 100).toFixed(3)}%`,
+    Position: "center", Repeat: "no-repeat",
+  };
+  for (const [k, v] of Object.entries(mask)) { canvas.style["mask" + k] = v; canvas.style["webkitMask" + k] = v; }
   gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
   const state = { mouse: [0.5, 0.3], target: null, kick: 0, on: 0 };
   // Calidad adaptativa por niveles: si un dispositivo va justo, baja la resolución, luego los fps
   // y, si aun así no puede, deja el logo como imagen fija (sin gastar batería).
   // Mide el coste en CPU de cada dibujo y también si los fotogramas llegan tarde (GPU saturada).
-  const coarse = matchMedia("(pointer: coarse)").matches;
   let quality = 1, cost = 0, gap = 16, frameN = 0, drawn = 0, every = opts.every || 1, frozen = false, lastT = 0;
   function resize() {
-    const dpr = Math.min(devicePixelRatio || 1, coarse ? 1.25 : 1.5) * quality;
+    const dpr = Math.min(devicePixelRatio || 1, 2) * quality;
     const w = Math.max(2, Math.round(canvas.clientWidth * dpr)), h = Math.max(2, Math.round(canvas.clientHeight * dpr));
     if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; gl.viewport(0, 0, w, h); }
   }
   function degrade() {
-    if (quality > 0.5) quality = Math.max(0.5, quality - 0.25);
+    if (quality > 0.6) quality = Math.max(0.6, quality - 0.2);
     else if (every < 2) every = 2;        // 30 fps
     else if (every < 6) every = 6;        // 10 fps
     else frozen = true;                   // imagen fija
@@ -207,7 +199,7 @@ window.IceLogo = function (canvas, img, mapImg, opts = {}) {
   function draw(timeSec) {
     resize();
     // Luz: sigue al ratón; si no hay ratón, orbita sola
-    const auto = [0.5 + 0.42 * Math.cos(timeSec * 0.35), 0.35 + 0.45 * Math.sin(timeSec * 0.5)];
+    const auto = [0.5 + 0.42 * Math.cos(timeSec * 0.35), 0.42 + 0.3 * Math.sin(timeSec * 0.4)];
     const tgt = state.target || auto;
     state.mouse[0] += (tgt[0] - state.mouse[0]) * 0.08;
     state.mouse[1] += (tgt[1] - state.mouse[1]) * 0.08;
@@ -222,7 +214,8 @@ window.IceLogo = function (canvas, img, mapImg, opts = {}) {
     aspect: TW / TH,
     pad: { x: padPx / TW, y: padPx / TH },
     render,
-    set on(v) { state.on = v; }, get on() { return state.on; },
+    // "on" también enciende el halo (variable CSS del contenedor)
+    set on(v) { state.on = v; canvas.parentNode?.style.setProperty("--logo-on", v.toFixed(3)); }, get on() { return state.on; },
     set kick(v) { state.kick = v; },
     pointTo(xNorm, yNorm) { state.target = xNorm == null ? null : [xNorm, yNorm]; },
   };

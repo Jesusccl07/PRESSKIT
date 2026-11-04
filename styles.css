@@ -179,10 +179,14 @@ html:not(.gsap) .hero-logo { translate: -50% -50%; }
 @keyframes fog { to { transform: translateX(-1400px); } }
 @keyframes fog2 { to { transform: translateX(-1900px); } }
 
-.hero-logo { position: absolute; left: 50%; top: 47%; width: min(1180px, 108vw); aspect-ratio: var(--logo-ar, 4.6); margin: 0; z-index: 2; }
-.hero-logo canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-.hero-logo img { position: absolute; inset: 7% 7%; width: 86%; height: auto; opacity: 0; filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 14px #4da3ff) drop-shadow(0 0 34px var(--glacier)); }
-.hero-logo.fallback img { opacity: 1; }
+/* Logo: halo (imagen) + cromo en WebGL recortado con máscara CSS. Lienzo con margen para el halo:
+   el logo ocupa el centro (6,9 % a los lados, 23,5 % arriba y abajo), igual que en assets/logo-ice-map*.webp */
+.hero-logo { position: absolute; left: 50%; top: 47%; width: min(1180px, 108vw); aspect-ratio: var(--logo-ar, 3.404); margin: 0; z-index: 2; --logo-on: 0; }
+.hero-logo canvas, .hero-logo .logo-glow { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.hero-logo .logo-glow { opacity: calc(var(--logo-on) * (.75 + var(--kick) * .25)); }
+#logoFallback { position: absolute; left: 6.9%; top: 23.5%; width: 86.2%; height: auto; opacity: 0; filter: drop-shadow(0 0 1px #fff); }
+.hero-logo.fallback { --logo-on: 1; }
+.hero-logo.fallback #logoFallback { opacity: 1; }
 .hero-cracks { z-index: 3; filter: drop-shadow(0 0 3px #4da3ff) drop-shadow(0 0 10px var(--glacier)); }
 .hero-foot { position: absolute; left: 0; right: 0; bottom: 10vh; bottom: 10svh; z-index: 4; display: flex; flex-direction: column; align-items: center; gap: 22px; padding: 0 16px; text-align: center; }
 .hero-tagline { font-size: clamp(16px, 1.6vw, 20px); font-weight: 500; font-stretch: 108%; color: var(--frost); text-shadow: 0 2px 16px rgba(0,0,0,.9); }
