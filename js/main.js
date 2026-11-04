@@ -237,8 +237,9 @@
       const faulty = candidates[Math.floor(Math.random() * candidates.length)];
       const word = letters.map((c, i) => (c === " " ? " " : `<span class="l${i === faulty ? " faulty" : ""}">${esc(c)}</span>`)).join("");
       const meta = [e.date, e.city].filter((v) => !isPh(v)).map(esc).join(", ");
+      const sub = e.resident ? T("venues.resident") : tr(e.sub);
       return `<li><div class="sign-plate"><i class="screw"></i><i class="screw"></i><i class="screw"></i><i class="screw"></i>
-        <span class="sign" aria-label="${esc(e.venue)}">${word}</span>${e.resident ? `<span class="sign-sub">${T("venues.resident")}</span>` : ""}</div>
+        <span class="sign" aria-label="${esc(e.venue)}">${word}</span>${sub && !isPh(sub) ? `<span class="sign-sub">${esc(sub)}</span>` : ""}</div>
         ${meta ? `<p class="sign-meta">${meta}</p>` : ""}</li>`;
     }).join("");
 

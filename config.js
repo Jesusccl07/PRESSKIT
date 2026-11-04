@@ -57,12 +57,12 @@ window.PRESSKIT = {
   about: {
     text: {
       es: [
-        "Soy Clement, DJ de Ciudad Real. Llevo más de seis años pinchando y más de 200 sesiones a mis espaldas, y hoy soy DJ residente en La Club y en Sala Systema. También he pinchado en salas como Euphoria.",
+        "Soy Clement, DJ de Ciudad Real. Llevo más de seis años pinchando y más de 200 sesiones a mis espaldas, y hoy soy DJ residente en La Club y en Sala Systema. También he pinchado en salas como Euphoria y en más de 50 eventos privados.",
         "Pincho reggaetón, dembow y trap: sesiones rápidas, mezclas con carácter y la pista arriba de principio a fin. Leo al público y elijo cada tema en el momento, para que nadie se quiera ir a casa.",
         "Fuera de la cabina creo mis propios mashups, mezclando clásicos con lo que suena ahora, y los comparto en TikTok. Me adapto a cualquier sala, a cualquier público y a cualquier equipo.",
       ],
       en: [
-        "I'm Clement, a DJ from Ciudad Real, Spain. I've been DJing for more than six years with over 200 sets behind me, and today I'm the resident DJ at La Club and Sala Systema. I've also played venues like Euphoria.",
+        "I'm Clement, a DJ from Ciudad Real, Spain. I've been DJing for more than six years with over 200 sets behind me, and today I'm the resident DJ at La Club and Sala Systema. I've also played venues like Euphoria and more than 50 private events.",
         "I play reggaeton, dembow and trap: fast sets, mixes with attitude and a dance floor that stays up from start to finish. I read the crowd and pick every track in the moment, so nobody wants to go home.",
         "Outside the booth I make my own mashups, blending classics with what's hot right now, and share them on TikTok. I adapt to any venue, any crowd and any setup.",
       ],
@@ -98,11 +98,12 @@ window.PRESSKIT = {
     // { title: "Live set @ ...", embed: "https://w.soundcloud.com/player/?url=..." },
   ],
 
-  // Salas. resident: true añade el rótulo "Residente"
+  // Salas (rótulos de neón). resident: true añade "Residente" debajo; sub: otro texto pequeño debajo
   events: [
     { venue: "La Club", city: "Ciudad Real", resident: true },
     { venue: "Sala Systema", resident: true },
     { venue: "Euphoria" },
+    { venue: "50+", sub: { es: "Eventos privados", en: "Private events" } },
   ],
 
   // Rider técnico (sencillo: lo justo para que la sala sepa qué necesito)
