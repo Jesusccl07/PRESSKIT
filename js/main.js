@@ -283,7 +283,7 @@
           <span class="phone-island"></span>
           <div class="phone-status"><span>${clock}</span><svg viewBox="0 0 34 12" aria-hidden="true"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="1" width="3" height="11" rx="1"/><rect x="22" y="1" width="10" height="10" rx="2.5" fill="none" stroke="#fff" stroke-width="1.2"/><rect x="23.6" y="2.6" width="6.4" height="6.8" rx="1.4"/></svg></div>
           <img class="phone-cover" src="${esc(v.cover)}" alt="" loading="lazy">
-          <div class="phone-rail"><span>${svg("heart")}${num(v.likes || 0)}</span><span>${svg("comment")}${num(v.comments || 0)}</span><span>${svg("eye")}${num(v.views || 0)}</span></div>
+          <div class="phone-rail">${[["heart", v.likes], ["comment", v.comments], ["eye", v.views]].filter(([, n]) => n != null).map(([i, n]) => `<span>${svg(i)}${num(+n)}</span>`).join("")}</div>
           <div class="phone-ui"><b>@${esc(handle)}</b><p>${esc(caption)}</p></div>
           <button class="phone-play" type="button" aria-label="${T("social.play")}">${svg("play")}</button>
         </div></div>
