@@ -224,8 +224,6 @@ html:not(.gsap) .hero-logo { translate: -50% -50%; }
 .about-facts div { padding: 16px 0; border-bottom: 1px solid var(--graphite); }
 .about-facts dt { font-size: 13px; color: var(--steel); }
 .about-facts dd { color: var(--white); font-weight: 600; font-stretch: 108%; }
-.about-photo img { transition: scale 1.2s cubic-bezier(.2,.7,.2,1); }
-.about-photo:hover img { scale: 1.1; }
 
 /* Fotos: galería horizontal con suelo brillante */
 .photos { position: relative; }
