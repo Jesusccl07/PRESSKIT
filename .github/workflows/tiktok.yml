@@ -1,11 +1,16 @@
 name: Actualizar TikTok
 
 # Cada 3 horas mira si hay vídeos nuevos en TikTok y actualiza la web.
-# También se puede lanzar a mano desde la pestaña Actions -> "Actualizar TikTok" -> Run workflow.
+# También se puede lanzar a mano: pestaña Actions -> "Actualizar TikTok" -> Run workflow.
 on:
   schedule:
     - cron: "17 */3 * * *"
   workflow_dispatch:
+    inputs:
+      force:
+        description: "Guardar aunque no haya vídeos nuevos"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -19,9 +24,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -29,6 +34,8 @@ jobs:
         run: pip install --upgrade "yt-dlp[default,curl-cffi]" pillow
 
       - name: Leer TikTok
+        env:
+          FORCE: ${{ inputs.force && '1' || '' }}
         run: python scripts/update_tiktok.py
 
       - name: Guardar cambios
