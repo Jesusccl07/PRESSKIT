@@ -7,7 +7,8 @@ Usa varias fuentes públicas, sin claves ni API, y si una falla prueba la siguie
      ofrece para incrustar en webs: trae los últimos vídeos, portadas y visualizaciones.
   2. yt-dlp: añade me gusta, comentarios y el total de visualizaciones.
   3. La página pública del perfil: seguidores y me gusta.
-  4. Instagram: los seguidores que muestra el perfil público (como lo ve cualquier visitante).
+  4. Instagram: seguidores y, si Instagram se deja, los me gusta y reproducciones de las
+     últimas publicaciones (lo mismo que ve cualquier visitante). Si bloquea, se queda lo último leído.
 Si todo falla, no toca nada y la web sigue mostrando lo último que se guardó.
 Para no llenar el historial de commits, si no hay vídeos nuevos solo refresca
 las cifras una vez al día.
@@ -84,8 +85,39 @@ def parse_count(num, suffix=""):
     return int(re.sub(r"[.,\s]", "", num))
 
 
+IG_APP_ID = "936619743392459"  # identificador público de la web de Instagram (lo envía cualquier navegador)
+
+
+def from_instagram_api():
+    """Instagram por la misma API que usa su web: seguidores, y me gusta y reproducciones de las últimas publicaciones."""
+    h = {"x-ig-app-id": IG_APP_ID, "X-Requested-With": "XMLHttpRequest", "Accept": "*/*",
+         "Accept-Language": HEADERS["Accept-Language"], "Referer": f"https://www.instagram.com/{IG_HANDLE}/",
+         "Sec-Fetch-Dest": "empty", "Sec-Fetch-Mode": "cors", "Sec-Fetch-Site": "same-origin"}
+    raw = http_get(f"https://www.instagram.com/api/v1/users/web_profile_info/?username={IG_HANDLE}",
+                   headers=h, redirects=False)
+    u = json.loads(raw)["data"]["user"]
+    media = u.get("edge_owner_to_timeline_media") or {}
+    nodes = [e.get("node") or {} for e in media.get("edges") or []]
+    out = {"handle": IG_HANDLE, "followers": int(u["edge_followed_by"]["count"]), "posts": media.get("count"),
+           "checked": datetime.date.today().isoformat()}
+    if nodes:  # solo trae las últimas ~12 publicaciones: la suma se queda corta, nunca se pasa
+        likes = lambda n: max((n.get(k) or {}).get("count") or 0 for k in ("edge_liked_by", "edge_media_preview_like"))
+        views = lambda n: max(n.get("video_play_count") or 0, n.get("video_view_count") or 0)
+        out.update(likes=sum(max(likes(n), 0) for n in nodes), views=sum(views(n) for n in nodes), counted=len(nodes))
+    return out
+
+
 def from_instagram():
-    """Fuente 4: seguidores y nº de publicaciones del perfil público de Instagram."""
+    """Fuente 4: Instagram. Primero su API web (trae me gusta y reproducciones); si no, el resumen del perfil."""
+    try:
+        return from_instagram_api()
+    except Exception as e:  # noqa: BLE001
+        log("API de Instagram no disponible:", e)
+    return from_instagram_page()
+
+
+def from_instagram_page():
+    """Seguidores y nº de publicaciones del resumen del perfil público de Instagram."""
     html = http_get(f"https://www.instagram.com/{IG_HANDLE}/", headers=NAV_HEADERS, redirects=False).decode("utf-8", "ignore")
     m = (re.search(r'property="og:description" content="([^"]+)"', html)
          or re.search(r'content="([^"]+)" property="og:description"', html))
@@ -280,8 +312,10 @@ def main():
     else:  # sin yt-dlp no hay total fiable: se conserva el último (nunca baja)
         totals = prev.get("totals") or {"views": sum(e.get("views") or 0 for e in embed_entries), "counted": len(embed_entries)}
 
-    data = {"profile": profile, "totals": totals, "latest": latest,
-            "instagram": instagram or prev.get("instagram") or {"handle": IG_HANDLE}}
+    # Instagram: lo nuevo pisa a lo anterior, pero si esta vez solo llegan los seguidores, se conservan
+    # los me gusta y reproducciones de la última lectura buena
+    ig = {"handle": IG_HANDLE, **(prev.get("instagram") or {}), **(instagram or {})}
+    data = {"profile": profile, "totals": totals, "latest": latest, "instagram": ig}
     same_videos = [v["id"] for v in latest] == [v["id"] for v in prev.get("latest", [])]
     if same_videos and prev.get("updated"):
         age = time.time() - datetime.datetime.fromisoformat(prev["updated"]).timestamp()

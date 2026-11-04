@@ -11,9 +11,9 @@ Web pública: **https://jesusccl07.github.io/PRESSKIT/** · en inglés: `?lang=e
   - logo de hielo en WebGL (`js/ice.js`), con relieve, grietas, destellos y halo neón
 - **Scroll tipo película** (GSAP + ScrollTrigger + Lenis): portada que se agrieta, frase que se enciende, cifras que cuentan, galería horizontal con suelo brillante.
 - **Sobre mí**, en primera persona.
-- **TikTok:** tus 3 últimos vídeos dentro de móviles realistas, con el reproductor oficial y cifras reales (seguidores, me gusta, visualizaciones).
+- **Redes:** tus 3 últimos TikToks dentro de móviles realistas, con el reproductor oficial, y tus cifras de TikTok e Instagram sumadas (seguidores, me gusta y visualizaciones).
 - **Salas:** rótulos de neón sobre hormigón, que se encienden con parpadeo.
-- **Rider con iconos:** equipo habitual, que te adaptas a cualquier equipo, monitores obligatorios y qué necesitas si llevas el tuyo.
+- **Rider sencillo:** normalmente Denon DJ, pero te adaptas a cualquier sistema Pioneer; monitores de cabina obligatorios; y, si hace falta, llevas tu equipo.
 - **Booking:** formulario que abre WhatsApp o el email con el mensaje ya escrito.
 - **Material para promotores:** ZIP, ficha PDF con QR y logos.
 - **Extras:**
@@ -40,14 +40,16 @@ Web pública: **https://jesusccl07.github.io/PRESSKIT/** · en inglés: `?lang=e
 - **En Android**, al inclinar el móvil se mueve la luz del hielo.
 - **Lighthouse móvil (mediana de 3):** rendimiento 61, con el contenido principal en 2,6 s; accesibilidad, buenas prácticas y SEO al 100.
 
-## TikTok que se actualiza solo
-`.github/workflows/tiktok.yml` ejecuta `scripts/update_tiktok.py` cada 3 horas. El script lee tu perfil público de TikTok con yt-dlp, sin claves, y guarda en `data/tiktok.json` y `data/tiktok/`:
-- los 3 últimos vídeos, con su portada;
-- las cifras del perfil.
+## Redes que se actualizan solas
+`.github/workflows/tiktok.yml` ejecuta `scripts/update_tiktok.py` cada 3 horas. Sin claves ni contraseñas, lee lo mismo que ve cualquier visitante y lo guarda en `data/tiktok.json` y `data/tiktok/`:
+- **TikTok:** los 3 últimos vídeos con su portada y las cifras del perfil. Los saca del widget oficial del perfil; yt-dlp y la página del perfil sirven de respaldo.
+- **Instagram:** los seguidores y, cuando Instagram se deja, los me gusta y reproducciones de las últimas publicaciones.
 
 Si hay cambios, los sube y la web se actualiza sola en 1-2 minutos.
 
-Para lanzarlo a mano: pestaña **Actions → Actualizar TikTok → Run workflow**.
+Instagram suele bloquear a los servidores de GitHub. Cuando pasa, la web sigue con la última cifra leída. Para corregirla a mano, pon tus totales en `social` dentro de `config.js` (`instagramFollowers`, `instagramLikes`, `instagramViews`).
+
+Para lanzarlo a mano: pestaña **Actions → Actualizar redes (TikTok e Instagram) → Run workflow**.
 
 Si TikTok fallara algún día, la web sigue mostrando lo último guardado. Y si no hubiera datos, usa el widget oficial del perfil.
 
@@ -60,6 +62,7 @@ Todo está en `config.js`. Los textos aceptan `"texto"` o `{ es: "...", en: "...
 | Añadir el banner | Súbelo a `assets/photos/` y pon su ruta en `banner` |
 | Añadir sets | Pega embeds de SoundCloud/YouTube en `music` |
 | Cambiar tu equipo | Edita `rider.groups` |
+| Corregir tus cifras de Instagram | Pon tus totales en `social`: `instagramFollowers`, `instagramLikes`, `instagramViews` |
 
 Archivos:
 - `index.html`: estructura

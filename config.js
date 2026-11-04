@@ -84,13 +84,13 @@ window.PRESSKIT = {
   ],
 
   // Redes. Los 3 últimos TikToks y las cifras se actualizan solos (GitHub Actions, cada 3 horas).
-  // Los seguidores suman TikTok + Instagram automáticamente. Instagram no deja leer los me gusta ni
-  // las visualizaciones sin iniciar sesión: si quieres sumarlos, pon aquí tus totales de Instagram.
+  // Seguidores, me gusta y visualizaciones suman TikTok + Instagram. Instagram suele bloquear la
+  // lectura automática, así que sus cifras pueden quedarse atrás: pon aquí tus totales para corregirlas.
   social: {
     tiktokData: "data/tiktok.json",
-    instagramFollowers: 0,   // 0 = usar el dato leído del perfil (Instagram bloquea a los servidores de GitHub, así que puede quedarse atrás)
-    instagramLikes: 0,
-    instagramViews: 0,
+    instagramFollowers: 0,   // 0 = usar lo leído automáticamente
+    instagramLikes: 0,       // 0 = usar lo leído automáticamente (si Instagram lo deja leer)
+    instagramViews: 0,       // 0 = usar lo leído automáticamente (si Instagram lo deja leer)
   },
 
   // Música: URLs de embed (SoundCloud / Spotify / YouTube / Mixcloud)

@@ -42,6 +42,7 @@
       "social.title": "En redes", "social.sub": "Mis tres últimos vídeos de TikTok. Se actualizan solos cada vez que subo uno nuevo.",
       "social.followers": "seguidores", "social.followersBoth": "seguidores en TikTok e Instagram", "social.likes": "me gusta", "social.views": "visualizaciones",
       "social.noteTT": "Me gusta y visualizaciones de TikTok.", "social.noteBoth": "Sumando TikTok e Instagram.",
+      "social.noteLikesTT": "Me gusta de TikTok; el resto suma TikTok e Instagram.", "social.noteViewsTT": "Visualizaciones de TikTok; el resto suma TikTok e Instagram.",
       "social.follow": "Seguir en TikTok", "social.ig": "Instagram", "social.open": "Abrir en TikTok", "social.play": "Reproducir vídeo",
       "social.updated": "Actualizado", "social.sound": "sonido original",
       "music.title": "Música", "venues.title": "Ha pinchado en", "venues.resident": "Residente", "rider.title": "Rider técnico",
@@ -66,6 +67,7 @@
       "social.title": "On social", "social.sub": "My three latest TikTok videos. They update by themselves every time I post a new one.",
       "social.followers": "followers", "social.followersBoth": "followers on TikTok and Instagram", "social.likes": "likes", "social.views": "views",
       "social.noteTT": "Likes and views from TikTok.", "social.noteBoth": "TikTok and Instagram combined.",
+      "social.noteLikesTT": "Likes from TikTok; the rest is TikTok and Instagram combined.", "social.noteViewsTT": "Views from TikTok; the rest is TikTok and Instagram combined.",
       "social.follow": "Follow on TikTok", "social.ig": "Instagram", "social.open": "Open in TikTok", "social.play": "Play video",
       "social.updated": "Updated", "social.sound": "original sound",
       "music.title": "Music", "venues.title": "Has played at", "venues.resident": "Resident", "rider.title": "Technical rider",
@@ -282,16 +284,18 @@
       if (r.ok) data = await r.json();
     } catch (e) { /* sin datos: se usa el widget oficial */ }
 
-    // Cifras unificadas: TikTok (automático) + Instagram (seguidores automáticos; me gusta y
-    // visualizaciones solo si se ponen en config.social, porque Instagram no los enseña sin iniciar sesión)
+    // Cifras unificadas: TikTok + Instagram. Lo leído automáticamente viene en data/tiktok.json y
+    // un valor puesto en config.social lo sustituye (Instagram suele bloquear la lectura automática)
     const p = data?.profile || {}, igD = data?.instagram || {};
-    const igFollowers = +C.social?.instagramFollowers || +igD.followers || 0, igLikes = +C.social?.instagramLikes || 0, igViews = +C.social?.instagramViews || 0;
+    const igNum = (key, cfg) => +C.social?.[cfg] || +igD[key] || 0;
+    const igFollowers = igNum("followers", "instagramFollowers"), igLikes = igNum("likes", "instagramLikes"), igViews = igNum("views", "instagramViews");
     const followers = (+p.followers || 0) + igFollowers;
     const likes = (+p.likes || 0) + igLikes, views = (+data?.totals?.views || 0) + igViews;
     const stats = [[followers, T(igFollowers ? "social.followersBoth" : "social.followers")], [likes, T("social.likes")], [views, T("social.views")]].filter(([v]) => v > 0);
     if (stats.length) {
       $("#socialStats").innerHTML = stats.map(([v, l]) => `<div><dt>${esc(l)}</dt><dd data-num="${v}">${num(v)}</dd></div>`).join("");
-      if (igFollowers) $("#socialStats").insertAdjacentHTML("afterend", `<p class="social-note">${T(igLikes || igViews ? "social.noteBoth" : "social.noteTT")}</p>`);
+      const note = igLikes && igViews ? "social.noteBoth" : igLikes ? "social.noteViewsTT" : igViews ? "social.noteLikesTT" : "social.noteTT";
+      if (igFollowers) $("#socialStats").insertAdjacentHTML("afterend", `<p class="social-note">${T(note)}</p>`);
     } else $("#socialStats").remove();
     $("#socialActions").innerHTML =
       `<a class="btn btn-primary" href="https://www.tiktok.com/@${esc(handle)}" target="_blank" rel="noopener">${svg("tiktok")}${T("social.follow")}</a>` +
