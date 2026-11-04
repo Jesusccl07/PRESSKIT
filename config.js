@@ -88,6 +88,7 @@ window.PRESSKIT = {
   // las visualizaciones sin iniciar sesión: si quieres sumarlos, pon aquí tus totales de Instagram.
   social: {
     tiktokData: "data/tiktok.json",
+    instagramFollowers: 0,   // 0 = usar el dato leído del perfil (Instagram bloquea a los servidores de GitHub, así que puede quedarse atrás)
     instagramLikes: 0,
     instagramViews: 0,
   },

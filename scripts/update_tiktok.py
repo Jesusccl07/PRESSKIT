@@ -58,9 +58,8 @@ def http_get(url, timeout=30, headers=None, redirects=True):
     h = headers or HEADERS
     try:
         from curl_cffi import requests as creq
-        # con curl_cffi el User-Agent lo pone él, a juego con su huella de Chrome (si no, parece un bot)
-        ch = {k: v for k, v in h.items() if k.lower() != "user-agent"}
-        r = creq.get(url, headers=ch, impersonate="chrome", timeout=timeout, allow_redirects=redirects)
+        # Si las cabeceras no traen User-Agent (Instagram), curl_cffi pone uno a juego con su huella de Chrome
+        r = creq.get(url, headers=h, impersonate="chrome", timeout=timeout, allow_redirects=redirects)
         r.raise_for_status()
         if not redirects and 300 <= r.status_code < 400:
             raise ValueError(f"redirige a {r.headers.get('location')}")

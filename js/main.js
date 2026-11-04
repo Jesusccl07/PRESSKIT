@@ -285,7 +285,7 @@
     // Cifras unificadas: TikTok (automático) + Instagram (seguidores automáticos; me gusta y
     // visualizaciones solo si se ponen en config.social, porque Instagram no los enseña sin iniciar sesión)
     const p = data?.profile || {}, igD = data?.instagram || {};
-    const igFollowers = +igD.followers || 0, igLikes = +C.social?.instagramLikes || 0, igViews = +C.social?.instagramViews || 0;
+    const igFollowers = +C.social?.instagramFollowers || +igD.followers || 0, igLikes = +C.social?.instagramLikes || 0, igViews = +C.social?.instagramViews || 0;
     const followers = (+p.followers || 0) + igFollowers;
     const likes = (+p.likes || 0) + igLikes, views = (+data?.totals?.views || 0) + igViews;
     const stats = [[followers, T(igFollowers ? "social.followersBoth" : "social.followers")], [likes, T("social.likes")], [views, T("social.views")]].filter(([v]) => v > 0);
