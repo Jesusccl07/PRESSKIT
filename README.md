@@ -22,6 +22,24 @@ Web pública: **https://jesusccl07.github.io/PRESSKIT/** · en inglés: `?lang=e
   - datos estructurados para Google, `sitemap.xml` y vista previa al compartir
   - accesible: respeta "reducir movimiento"
 
+## Optimizada para móvil
+- **Carga rápida:**
+  - la foto de portada va directamente en el HTML y el vídeo de fondo arranca al instante (159 KB en móvil);
+  - galería, "Sobre mí" y la fuente de neón se cargan cuando hacen falta.
+- **Sin cálculos pesados en el teléfono:**
+  - el etalonado de la foto, el contraluz y el relieve del hielo vienen pre-calculados (`assets/photos/*-graded/-rim.webp`, `assets/logo-ice-map*.webp`), con un mapa más pequeño para móvil;
+  - el hielo va a 30 fps en móvil y, si el teléfono va justo, baja de calidad hasta quedarse en imagen fija.
+- **Scroll nativo en táctil** (Lenis solo con ratón) y efectos más ligeros: humo movido por la GPU, haces sin desenfoque, grano sin animar.
+- **Uso con el dedo:**
+  - todo lo tocable mide al menos 44 px;
+  - barra inferior tipo app (Play, WhatsApp y Contratar);
+  - accesos a redes en el menú;
+  - avisos de "Desliza" en los carruseles;
+  - márgenes para la muesca y la barra del iPhone;
+  - portada recompuesta para el móvil en horizontal.
+- **En Android**, al inclinar el móvil se mueve la luz del hielo.
+- **Lighthouse móvil (mediana de 3):** rendimiento 61, con el contenido principal en 2,6 s; accesibilidad, buenas prácticas y SEO al 100.
+
 ## TikTok que se actualiza solo
 `.github/workflows/tiktok.yml` ejecuta `scripts/update_tiktok.py` cada 3 horas. El script lee tu perfil público de TikTok con yt-dlp, sin claves, y guarda en `data/tiktok.json` y `data/tiktok/`:
 - los 3 últimos vídeos, con su portada;

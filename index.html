@@ -49,10 +49,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Tilt+Neon&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&display=swap" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Tilt+Neon&display=swap"></noscript>
   <link rel="preload" as="image" href="assets/logo.webp">
-  <link rel="preload" as="image" href="assets/photos/clement-gafas.webp">
+  <link rel="preload" as="image" href="assets/photos/clement-gafas-graded.webp" fetchpriority="high">
+  <link rel="preload" as="image" href="assets/video/hero-tall.jpg" media="(orientation: portrait)">
+  <link rel="preload" as="image" href="assets/video/hero-wide.jpg" media="(orientation: landscape)">
   <link rel="stylesheet" href="styles.css">
   <script>
     document.documentElement.classList.add("js");
@@ -91,6 +93,7 @@
       <a href="#venues" data-i18n="nav.venues"></a>
       <a href="#rider" data-i18n="nav.rider"></a>
       <a href="#booking" class="nav-cta" data-i18n="nav.booking"></a>
+      <div class="menu-social" id="menuSocial"></div>
     </nav>
     <button class="lang" id="langBtn" type="button"><span data-l="es">ES</span><span data-l="en">EN</span></button>
     <button class="nav-toggle" id="navToggle" type="button" aria-label="Menú" aria-expanded="false"><span></span><span></span></button>
@@ -100,11 +103,20 @@
     <!-- PORTADA: discoteca real de fondo + tú + logo de hielo -->
     <section class="hero" id="hero">
       <div class="hero-bg" aria-hidden="true"></div>
-      <video class="hero-video" id="heroVideo" muted loop playsinline preload="none" aria-hidden="true" tabindex="-1"></video>
+      <video class="hero-video" id="heroVideo" muted loop playsinline autoplay preload="auto" aria-hidden="true" tabindex="-1"></video>
+      <script>
+        // El vídeo de fondo empieza a cargar ya, sin esperar a nada: vertical en móvil, horizontal en ordenador
+        (function () {
+          var v = document.getElementById("heroVideo"), c = navigator.connection || {}, tall = innerHeight > innerWidth;
+          if (matchMedia("(prefers-reduced-motion: reduce)").matches || c.saveData) return;
+          v.dataset.k = tall ? "tall" : "wide";
+          v.src = tall ? "assets/video/hero-tall.mp4" : "assets/video/hero-wide.mp4";
+        })();
+      </script>
       <div class="hero-grade" aria-hidden="true"></div>
       <div class="hero-beams" aria-hidden="true"><i></i><i></i><i></i></div>
       <div class="hero-neon" id="heroNeon" aria-hidden="true"><i></i></div>
-      <div class="hero-person" id="heroPerson"><div class="person-stack" id="personStack"></div></div>
+      <div class="hero-person" id="heroPerson"><div class="person-stack" id="personStack"><img class="person-base" src="assets/photos/clement-gafas-graded.webp" alt="" fetchpriority="high"><img class="person-rim" src="assets/photos/clement-gafas-rim.webp" alt="" decoding="async"></div></div>
       <div class="hero-fog" aria-hidden="true"><i></i><i></i></div>
       <h1 class="hero-logo" id="heroLogo">
         <canvas id="iceCanvas" aria-hidden="true"></canvas>
@@ -146,6 +158,7 @@
           <p data-i18n="photos.sub"></p>
         </div>
         <div class="hscroll" id="hscroll"><div class="track" id="track"></div></div>
+        <p class="swipe-hint" aria-hidden="true"><span data-i18n="ui.swipe"></span> <i>→</i></p>
       </div>
     </section>
 
@@ -159,6 +172,7 @@
           <div class="social-actions" id="socialActions"></div>
         </div>
         <div class="phones" id="phones"></div>
+        <p class="swipe-hint" aria-hidden="true"><span data-i18n="ui.swipe"></span> <i>→</i></p>
       </div>
     </section>
 
@@ -209,11 +223,16 @@
     </div>
   </footer>
 
-  <button class="sound-btn" id="soundBtn" type="button" aria-pressed="false">
-    <span class="sound-vinyl" aria-hidden="true"></span>
-    <span class="sound-label" id="soundLabel">Play</span>
-    <span class="sound-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
-  </button>
+  <!-- Barra inferior: en ordenador solo el botón Play; en móvil, barra tipo app con Play, WhatsApp y Contratar -->
+  <div class="dock" id="dock">
+    <button class="sound-btn" id="soundBtn" type="button" aria-pressed="false">
+      <span class="sound-vinyl" aria-hidden="true"></span>
+      <span class="sound-label" id="soundLabel">Play</span>
+      <span class="sound-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    </button>
+    <a class="dock-wa" id="dockWa" href="#booking" aria-label="WhatsApp" target="_blank" rel="noopener" hidden></a>
+    <a class="btn btn-primary dock-cta" id="dockCta" href="#booking" data-i18n="hero.book"></a>
+  </div>
 
   <div class="lightbox" id="lightbox" aria-hidden="true" role="dialog">
     <button class="lb-close" type="button" aria-label="Cerrar">×</button>

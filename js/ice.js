@@ -2,13 +2,26 @@
    A partir del PNG del logo se crea un mapa: R = forma nítida, G = relieve (desenfoque corto),
    B = halo (desenfoque largo). El shader calcula biselado, grietas, escarcha, reflejos tipo
    cromo y un halo neón. La luz sigue al ratón y el bombo (kick) mete un golpe RGB. */
-window.IceLogo = function (canvas, img) {
+window.IceLogo = function (canvas, img, mapImg, opts = {}) {
   const PAD = 0.08; // margen alrededor del logo (fracción del ancho del logo), para el halo
   let gl;
   try { gl = canvas.getContext("webgl", { premultipliedAlpha: true, alpha: true, antialias: false }); } catch (e) { return null; }
   if (!gl) return null;
 
   // ---------- Mapa del logo ----------
+  // Lo normal: el mapa viene pre-calculado (assets/logo-ice-map*.webp) y el móvil no hace cuentas.
+  // Si no está, se calcula aquí a partir del logo.
+  let TW, TH, padPx, tex = null;
+  if (mapImg) {
+    TW = mapImg.naturalWidth; TH = mapImg.naturalHeight;
+    padPx = Math.round((TW * PAD) / (1 + 2 * PAD));
+  } else {
+    const m = computeMap();
+    if (!m) return null;
+    ({ TW, TH, padPx, tex } = m);
+  }
+
+  function computeMap() {
   const aspect = img.naturalWidth / img.naturalHeight;
   const logoW = 1300, padPx = Math.round(logoW * PAD), logoH = Math.round(logoW / aspect);
   const TW = logoW + padPx * 2, TH = logoH + padPx * 2;
@@ -68,6 +81,8 @@ window.IceLogo = function (canvas, img) {
     tex[i * 4 + 1] = Math.min(255, bevel[i] * 255);
     tex[i * 4 + 2] = Math.min(255, halo[i] * 340);
     tex[i * 4 + 3] = 255;
+  }
+  return { TW, TH, padPx, tex };
   }
 
   // ---------- Shaders ----------
@@ -141,7 +156,13 @@ window.IceLogo = function (canvas, img) {
   const loc = gl.getAttribLocation(prog, "p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   const t0 = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t0);
   gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, TW, TH, 0, gl.RGBA, gl.UNSIGNED_BYTE, tex);
+  if (tex) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, TW, TH, 0, gl.RGBA, gl.UNSIGNED_BYTE, tex);
+  else {
+    // datos, no color: sin gestión de color ni premultiplicado
+    gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+    try { gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, mapImg); } catch (e) { return null; }
+  }
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -154,26 +175,34 @@ window.IceLogo = function (canvas, img) {
   gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
   const state = { mouse: [0.5, 0.3], target: null, kick: 0, on: 0 };
-  // Calidad adaptativa: si un dispositivo va justo, baja la resolución y luego los fps
-  let quality = 1, cost = 0, frameN = 0, skip = false;
+  // Calidad adaptativa por niveles: si un dispositivo va justo, baja la resolución, luego los fps
+  // y, si aun así no puede, deja el logo como imagen fija (sin gastar batería).
+  // Mide el coste en CPU de cada dibujo y también si los fotogramas llegan tarde (GPU saturada).
+  const coarse = matchMedia("(pointer: coarse)").matches;
+  let quality = 1, cost = 0, gap = 16, frameN = 0, drawn = 0, every = opts.every || 1, frozen = false, lastT = 0;
   function resize() {
-    const dpr = Math.min(devicePixelRatio || 1, matchMedia("(pointer: coarse)").matches ? 1.25 : 1.5) * quality;
+    const dpr = Math.min(devicePixelRatio || 1, coarse ? 1.25 : 1.5) * quality;
     const w = Math.max(2, Math.round(canvas.clientWidth * dpr)), h = Math.max(2, Math.round(canvas.clientHeight * dpr));
     if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; gl.viewport(0, 0, w, h); }
   }
+  function degrade() {
+    if (quality > 0.5) quality = Math.max(0.5, quality - 0.25);
+    else if (every < 2) every = 2;        // 30 fps
+    else if (every < 6) every = 6;        // 10 fps
+    else frozen = true;                   // imagen fija
+  }
   function render(timeSec) {
-    if (state.on <= 0.001) return;                 // invisible: no se dibuja
-    frameN++;
-    if (skip && frameN % 2) return;                // modo ahorro: 30 fps
-    const t0 = performance.now();
+    if (state.on <= 0.001 || frozen) return;       // invisible o congelado: no se dibuja
+    const now = performance.now();
+    if (lastT) gap = gap * 0.9 + Math.min(200, now - lastT) * 0.1;
+    lastT = now;
+    if (++frameN % every) return;
     draw(timeSec);
-    const dt = performance.now() - t0;
-    cost = frameN < 4 ? dt : cost * 0.8 + dt * 0.2;
-    // Un fotograma muy lento baja la calidad al momento; si no, se revisa cada 10
-    if (dt > 40 || (frameN % 10 === 0 && cost > 9)) {
-      if (quality > 0.5) quality = Math.max(0.5, quality - 0.25);
-      else skip = true;
-    }
+    const dt = performance.now() - now;
+    drawn++;
+    cost = drawn < 4 ? dt : cost * 0.8 + dt * 0.2;
+    // Un dibujo muy lento degrada al momento; si no, se revisa cada 20 dibujos
+    if (dt > 40 || (drawn % 20 === 0 && (cost > 9 || gap > 30))) degrade();
   }
   function draw(timeSec) {
     resize();

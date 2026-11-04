@@ -35,6 +35,10 @@ window.PRESSKIT = {
   },
 
   heroImage: "assets/photos/clement-gafas.webp",
+  // Capas de la portada ya calculadas (etalonado frío + contraluz azul), para que el móvil no haga cuentas
+  heroLayers: { base: "assets/photos/clement-gafas-graded.webp", rim: "assets/photos/clement-gafas-rim.webp" },
+  // Mapas del logo de hielo (relieve y halo) a dos tamaños: ordenador y móvil
+  iceMap: { large: "assets/logo-ice-map.webp", small: "assets/logo-ice-map-sm.webp" },
   aboutImage: "assets/photos/clement-cascos.webp",
   banner: "",                                     // Banner horizontal, p. ej. "assets/photos/clement-banner.jpg" (vacío = no se muestra)
 

@@ -7,6 +7,9 @@
   const isPh = (v) => v == null || String(v).trim() === "" || /^\s*\[.*\]\s*$/.test(String(v));
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const fine = matchMedia("(pointer: fine)").matches;
+  const touch = matchMedia("(pointer: coarse)").matches;
+  const conn = navigator.connection || {};
+  const slowNet = !!conn.saveData || /(^|-)2g$|^3g$/.test(conn.effectiveType || "");
   const G = window.gsap, ST = window.ScrollTrigger;
   const animated = !!(G && ST) && !reduce;
   const root = document.documentElement;
@@ -16,6 +19,7 @@
   const yieldTask = () => new Promise((r) => setTimeout(r, 0)); // trocea el trabajo en tareas cortas
   if (G && ST) {
     G.registerPlugin(ST);
+    ST.config({ ignoreMobileResize: true });
     root.classList.add("gsap");
     G.set("#heroLogo", { xPercent: -50, yPercent: -50 });
     G.set(["#heroPerson", "#heroNeon"], { xPercent: -50 });
@@ -49,7 +53,7 @@
       "contact.phone": "Teléfono", "contact.whatsapp": "WhatsApp", "contact.waValue": "Escríbeme", "contact.mail": "Email",
       "contact.listen": "Escuchar", "contact.watch": "Ver vídeos",
       "footer.rights": "Todos los derechos reservados.", "footer.top": "Volver arriba",
-      "sound.play": "Play", "sound.pause": "Pausa", "cursor.view": "Ver", "cursor.play": "Play", "lang.label": "View in English",
+      "sound.play": "Play", "sound.pause": "Pausa", "cursor.view": "Ver", "cursor.play": "Play", "lang.label": "View in English", "ui.swipe": "Desliza",
     },
     en: {
       "nav.about": "About", "nav.photos": "Photos", "nav.social": "TikTok", "nav.music": "Music", "nav.venues": "Venues", "nav.rider": "Rider", "nav.booking": "Booking",
@@ -72,7 +76,7 @@
       "contact.phone": "Phone", "contact.whatsapp": "WhatsApp", "contact.waValue": "Message me", "contact.mail": "Email",
       "contact.listen": "Listen", "contact.watch": "Watch videos",
       "footer.rights": "All rights reserved.", "footer.top": "Back to top",
-      "sound.play": "Play", "sound.pause": "Pause", "cursor.view": "View", "cursor.play": "Play", "lang.label": "Ver en español",
+      "sound.play": "Play", "sound.pause": "Pause", "cursor.view": "View", "cursor.play": "Play", "lang.label": "Ver en español", "ui.swipe": "Swipe",
     },
   };
   const T = (k) => I18N[lang][k] ?? I18N.es[k] ?? k;
@@ -129,7 +133,7 @@
   };
   const music = () => (C.music || []).filter((m) => m && !isPh(m.embed));
 
-  let logoImg = null, personImg = null, galleryList = [];
+  let logoImg = null, galleryList = [];
 
   /* ===================== CONTENIDO ===================== */
   async function render() {
@@ -138,15 +142,21 @@
     $("#langBtn").setAttribute("aria-label", T("lang.label"));
     $("#soundLabel").textContent = T("sound.play");
 
-    const [logo, hero, aboutImg, banner] = await Promise.all([probe(C.logo.main), probe(C.heroImage), probe(C.aboutImage), probe(C.banner)]);
-    logoImg = logo; personImg = hero;
+    const [logo, banner, layer] = await Promise.all([probe(C.logo.main), probe(C.banner), probe(C.heroLayers?.base)]);
+    logoImg = logo;
     const name = esc(C.artist.name);
     if (logo) {
       $("#logoFallback").src = C.logo.main;
       $("#navLogo").innerHTML = `<img src="${C.logo.main}" alt="${name}">`;
       $("#footerLogo").innerHTML = `<img src="${C.logo.main}" alt="">`;
     }
-    if (hero) $("#personStack").innerHTML = `<img class="person-base" src="${C.heroImage}" alt="" fetchpriority="high">`;
+    // La foto ya viene en el HTML; solo se cambia si la config apunta a otra o las capas no existen
+    const base = $("#personStack .person-base"), rim = $("#personStack .person-rim");
+    if (layer) {
+      if (!base.src.endsWith(C.heroLayers.base)) base.src = C.heroLayers.base;
+      if (C.heroLayers.rim && !rim.src.endsWith(C.heroLayers.rim)) rim.src = C.heroLayers.rim;
+    } else if (await probe(C.heroImage)) { base.src = C.heroImage; rim.remove(); }
+    else $("#personStack").innerHTML = "";
 
     // Portada
     const tag = tr(C.artist.tagline);
@@ -177,23 +187,32 @@
       const facts = (C.about.facts || []).filter((f) => !isPh(tr(f.value)));
       if (facts.length) $("#aboutFacts").innerHTML = facts.map((f) => `<div><dt>${esc(tr(f.label))}</dt><dd>${esc(tr(f.value))}</dd></div>`).join("");
       else $("#aboutFacts").remove();
-      if (aboutImg) $("#aboutPhoto").innerHTML = `<img src="${C.aboutImage}" alt="${name}">`; else $("#aboutPhoto").remove();
+      if (!isPh(C.aboutImage)) { $("#aboutPhoto").innerHTML = `<img src="${C.aboutImage}" alt="${name}" loading="lazy" decoding="async">`; $("#aboutPhoto img").onerror = () => $("#aboutPhoto")?.remove(); } else $("#aboutPhoto").remove();
     }
 
     // Fotos
-    const ok = await Promise.all(C.photos.map((p) => probe(p.src)));
-    const photos = C.photos.filter((_, i) => ok[i]);
+    const photos = (C.photos || []).filter((p) => p && !isPh(p.src));
     galleryList = photos.map((p) => p.src);
     if (galleryList[0]) $(".lb-download").href = galleryList[0];
     const dls = (C.logo.downloads || []).map((l) =>
       `<a class="btn ${l.primary ? "btn-primary" : "btn-ghost"}" href="${l.src}" download>${esc(tr(l.label))}</a>`).join("");
     const panels = photos.map((p, i) => `
       <figure class="panel${p.wide ? " wide" : ""}" data-i="${i}" data-cursor="${T("cursor.view")}">
-        <div class="panel-frame"><div class="panel-clip liquid"><img src="${p.src}" alt="${name}, foto ${i + 1}" loading="lazy" draggable="false"></div></div>
+        <div class="panel-frame"><div class="panel-clip liquid"><img src="${p.src}" alt="${name}, foto ${i + 1}" loading="lazy" decoding="async" draggable="false"></div></div>
         <figcaption><span>${i + 1}/${photos.length}</span><a href="${p.src}" download>${T("photos.download")}</a></figcaption>
       </figure>`).join("");
     const dlPanel = dls ? `<div class="panel panel-dl">${logo ? `<img src="${C.logo.main}" alt="">` : ""}<h3>${T("photos.dlTitle")}</h3><p>${T("photos.dlText")}</p><div class="dl-list">${dls}</div></div>` : "";
-    if (!panels && !dlPanel) hideSection("photos"); else $("#track").innerHTML = panels + dlPanel;
+    if (!panels && !dlPanel) hideSection("photos");
+    else {
+      $("#track").innerHTML = panels + dlPanel;
+      // si alguna foto no existe, se quita su panel (y de la lista del visor)
+      $$("#track .panel[data-i] img").forEach((img) => (img.onerror = () => {
+        const src = img.getAttribute("src");
+        galleryList = galleryList.filter((s) => s !== src);
+        img.closest(".panel").remove();
+        ST?.refresh();
+      }));
+    }
 
     await renderSocial();
 
@@ -234,10 +253,17 @@
         `<li><a href="${esc(href)}"${ext(href)}>${svg(icon)}<small>${esc(label)}</small><span>${esc(value)}</span></a></li>`).join("");
       $("#footerSocial").innerHTML = items.filter(([i]) => !["phone", "mail"].includes(i)).map(([icon, label, , href]) =>
         `<a href="${esc(href)}"${ext(href)} aria-label="${esc(label)}">${svg(icon)}</a>`).join("");
+      $("#menuSocial").innerHTML = items.filter(([i]) => i !== "phone").map(([icon, label, , href]) =>
+        `<a href="${esc(href)}"${ext(href)} aria-label="${esc(label)}">${svg(icon)}</a>`).join("");
+      if (!isPh(C.contact.whatsapp)) {
+        const wa = $("#dockWa");
+        wa.href = `https://wa.me/${C.contact.whatsapp}?text=${encodeURIComponent(T("msg.hello").replace("{name}", C.artist.name))}`;
+        wa.innerHTML = svg("whatsapp"); wa.hidden = false;
+      }
       setupForm();
     }
     $("#year").textContent = new Date().getFullYear();
-    $$("#navLinks a").forEach((a) => { const t = document.querySelector(a.getAttribute("href")); if (!t || t.hidden) a.hidden = true; });
+    $$('#navLinks > a[href^="#"]').forEach((a) => { const t = document.querySelector(a.getAttribute("href")); if (!t || t.hidden) a.hidden = true; });
   }
 
   /* ===================== TIKTOK ===================== */
@@ -282,7 +308,7 @@
         <div class="phone-body"><div class="phone-screen">
           <span class="phone-island"></span>
           <div class="phone-status"><span>${clock}</span><svg viewBox="0 0 34 12" aria-hidden="true"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="1" width="3" height="11" rx="1"/><rect x="22" y="1" width="10" height="10" rx="2.5" fill="none" stroke="#fff" stroke-width="1.2"/><rect x="23.6" y="2.6" width="6.4" height="6.8" rx="1.4"/></svg></div>
-          <img class="phone-cover" src="${esc(v.cover)}" alt="" loading="lazy">
+          <img class="phone-cover" src="${esc(v.cover)}" alt="" loading="lazy" decoding="async">
           <div class="phone-rail">${[["heart", v.likes], ["comment", v.comments], ["eye", v.views]].filter(([, n]) => n != null).map(([i, n]) => `<span>${svg(i)}${num(+n)}</span>`).join("")}</div>
           <div class="phone-ui"><b>@${esc(handle)}</b><p>${esc(caption)}</p></div>
           <button class="phone-play" type="button" aria-label="${T("social.play")}">${svg("play")}</button>
@@ -328,73 +354,24 @@
   }
 
   /* ===================== REALISMO DE LA PORTADA ===================== */
-  // Tu foto: etalonado frío + luz de contorno azul calculada del borde de la silueta
-  async function buildPerson() {
-    if (!personImg) return;
-    const W = personImg.naturalWidth, H = personImg.naturalHeight;
-    const mk = () => { const c = document.createElement("canvas"); c.width = W; c.height = H; return c; };
-    const baseC = mk(), bctx = baseC.getContext("2d", { willReadFrequently: true });
-    const blurC = mk(), blctx = blurC.getContext("2d", { willReadFrequently: true });
-    if (!("filter" in blctx)) return;
-    blctx.filter = `blur(${Math.max(4, Math.round(W / 64))}px)`;
-    if (blctx.filter === "none") return;
-    let d, b;
-    try {
-      bctx.drawImage(personImg, 0, 0); blctx.drawImage(personImg, 0, 0);
-      d = bctx.getImageData(0, 0, W, H); b = blctx.getImageData(0, 0, W, H).data;
-    } catch (e) { return; } // file:// no deja leer píxeles
-    const px = d.data, rimC = mk(), rctx = rimC.getContext("2d"), rim = rctx.createImageData(W, H), rp = rim.data;
-    const L1x = -0.55, L1y = -0.83, L2x = 0.55, L2y = -0.83, row = W * 4;
-    let slice = performance.now();
-    for (let y = 1; y < H - 1; y++) {
-      // trocea el cálculo para no bloquear la página (tareas de ~12 ms)
-      if (performance.now() - slice > 12) { await yieldTask(); slice = performance.now(); }
-      const top = 1 - (y / H) * 0.55;
-      for (let x = 1; x < W - 1; x++) {
-        const i = y * row + x * 4, a = px[i + 3];
-        if (!a) continue;
-        const R = px[i], Gc = px[i + 1], B = px[i + 2];
-        const lum = (R * 0.299 + Gc * 0.587 + B * 0.114) / 255, sh = 1 - lum;
-        const gray = lum * 255;
-        // sombras hacia el azul noche, ligera desaturación
-        px[i] = Math.min(255, (R * 0.78 + gray * 0.22) * 0.9 + 4 * sh);
-        px[i + 1] = Math.min(255, (Gc * 0.78 + gray * 0.22) * 0.94 + 12 * sh);
-        px[i + 2] = Math.min(255, (B * 0.78 + gray * 0.22) * 1.02 + 30 * sh);
-        // contraluz: banda interior del borde, más fuerte donde mira hacia los focos (arriba y laterales)
-        const A = a / 255, ba = b[i + 3] / 255;
-        const edge = Math.min(1, Math.max(0, (A - ba) * 2.8));
-        if (edge < 0.02) continue;
-        const gx = (b[i + 7] - b[i - 1]) / 255, gy = (b[i + row + 3] - b[i - row + 3]) / 255;
-        const len = Math.hypot(gx, gy) + 1e-4, nx = -gx / len, ny = -gy / len;
-        const w = Math.max(0, nx * L1x + ny * L1y) + Math.max(0, nx * L2x + ny * L2y);
-        const k = edge * (0.12 + 0.8 * w) * top;
-        rp[i] = 160; rp[i + 1] = 205; rp[i + 2] = 255; rp[i + 3] = Math.min(200, k * 170 * A);
-      }
-    }
-    bctx.putImageData(d, 0, 0); rctx.putImageData(rim, 0, 0);
-    baseC.className = "person-base"; rimC.className = "person-rim";
-    const stack = $("#personStack");
-    stack.innerHTML = ""; stack.append(baseC, rimC);
-  }
-
-  // Vídeo de fondo: horizontal o vertical según la pantalla; se pausa fuera de la portada
+  // Vídeo de fondo: el HTML ya lo empezó a cargar (es lo primero que se ve). Aquí solo se cambia
+  // de versión si se gira la pantalla, y se pausa cuando la portada no está a la vista.
   function setupVideo() {
     const v = $("#heroVideo"), hv = C.heroVideo;
     if (!hv) return v.remove();
     const pick = () => (innerHeight > innerWidth ? "tall" : "wide");
-    let current = null;
+    let current = v.dataset.k || null;
     const load = () => {
       const k = pick();
-      if (k === current) return;
+      if (k === current || reduce || navigator.connection?.saveData) return;
       current = k;
-      v.poster = k === "tall" ? hv.posterTall : hv.posterWide;
-      if (reduce || navigator.connection?.saveData) return; // solo la imagen fija
       v.src = k === "tall" ? hv.tall : hv.wide;
       v.play().catch(() => {});
     };
-    load();
+    if (current && !v.getAttribute("src")?.endsWith(current === "tall" ? hv.tall : hv.wide)) { current = null; } // la config apunta a otro vídeo
+    if (!current) load();
     let t; addEventListener("resize", () => { clearTimeout(t); t = setTimeout(load, 300); });
-    new IntersectionObserver(([e]) => { if (!v.src) return; e.isIntersecting ? v.play().catch(() => {}) : v.pause(); }).observe($("#hero"));
+    new IntersectionObserver(([e]) => { if (!v.getAttribute("src")) return; e.isIntersecting ? v.play().catch(() => {}) : v.pause(); }).observe($("#hero"));
   }
 
   /* ===================== GRIETAS (SVG procedural) ===================== */
@@ -422,9 +399,11 @@
 
   /* ===================== LOGO DE HIELO ===================== */
   let ice = null;
-  function setupIce() {
+  async function setupIce() {
     const box = $("#heroLogo"), canvas = $("#iceCanvas");
-    if (logoImg) ice = window.IceLogo ? window.IceLogo(canvas, logoImg) : null;
+    const small = touch || innerWidth < 900;
+    const map = await probe(small ? C.iceMap?.small : C.iceMap?.large);
+    if (logoImg) ice = window.IceLogo ? window.IceLogo(canvas, logoImg, map, { every: touch ? 2 : 1 }) : null;
     if (ice) box.style.setProperty("--logo-ar", ice.aspect);
     else {
       canvas.remove(); box.classList.add("fallback");
@@ -440,13 +419,14 @@
   /* ===================== INTRO ===================== */
   function playIntro(onReveal) {
     const intro = $("#intro");
-    const skip = !animated || !logoImg || sess.get("pk-intro") === "1";
+    const skip = !animated || !logoImg || slowNet || sess.get("pk-intro") === "1";
     if (skip) { intro.remove(); onReveal(false); return; }
     const count = $("#introCount"), prog = { v: 0 };
     const tick = () => (count.textContent = Math.round(prog.v));
-    G.to(prog, { v: 88, duration: 1.1, ease: "power1.out", onUpdate: tick });
-    const ready = Promise.race([Promise.all([document.fonts ? document.fonts.ready : 0]), new Promise((r) => setTimeout(r, 2500))]);
-    Promise.all([ready, new Promise((r) => setTimeout(r, 900))]).then(() =>
+    const minWait = touch ? 450 : 900, maxFonts = touch ? 1300 : 2500;
+    G.to(prog, { v: 88, duration: minWait / 1000 + 0.2, ease: "power1.out", onUpdate: tick });
+    const ready = Promise.race([Promise.all([document.fonts ? document.fonts.ready : 0]), new Promise((r) => setTimeout(r, maxFonts))]);
+    Promise.all([ready, new Promise((r) => setTimeout(r, minWait))]).then(() =>
       G.to(prog, { v: 100, duration: 0.3, onUpdate: tick, onComplete: assemble }));
 
     function assemble() {
@@ -471,6 +451,7 @@
       const cracks = crackPaths($("#introCracks"), r.left + r.width / 2, r.top + r.height / 2, innerWidth, innerHeight, 14, Math.max(innerWidth, innerHeight) * 0.6);
       const rnd = G.utils.random;
       const tl = G.timeline({ onComplete: () => { intro.remove(); sess.set("pk-intro", "1"); } });
+      if (touch) tl.timeScale(1.3); // en móvil, la misma intro pero más ágil
       tl.to(".intro-count", { opacity: 0, duration: 0.3 })
         .from(shards, {
           x: () => rnd(-0.8, 0.8) * innerWidth, y: () => rnd(-0.8, 0.8) * innerHeight, z: () => rnd(-900, 300),
@@ -491,6 +472,10 @@
 
   function revealHero(fromIntro) {
     document.body.classList.remove("is-loading");
+    // la fuente de los rótulos de neón se usa más abajo: se pide ahora, fuera del arranque
+    const neonFont = document.createElement("link");
+    neonFont.rel = "stylesheet"; neonFont.href = "https://fonts.googleapis.com/css2?family=Tilt+Neon&display=swap";
+    document.head.appendChild(neonFont);
     if (ice && !fromIntro) ice.on = 1;
     const neon = $("#heroNeon");
     if (!animated) { neon.classList.add("on"); return; }
@@ -499,7 +484,7 @@
       .add(() => neon.classList.add("on"), 0.35)
       .from("#heroFoot > *", { y: 30, opacity: 0, duration: 1, ease: "expo.out", stagger: 0.1 }, 0.5)
       .from("#nav > *", { y: -30, opacity: 0, duration: 0.9, ease: "expo.out", stagger: 0.06, clearProps: "transform,opacity" }, 0.6)
-      .from(".sound-btn", { y: 80, duration: 0.9, ease: "expo.out" }, 0.8);
+      .from("#dock", { opacity: 0, duration: 0.8, ease: "power2.out", clearProps: "opacity" }, 0.8);
     if (!fromIntro && ice) G.from(ice, { on: 0, duration: 0.8 });
     if (lenis) lenis.start();
   }
@@ -508,7 +493,7 @@
   let lenis = null;
   function setupScroll() {
     if (!animated) return;
-    if (window.Lenis) {
+    if (window.Lenis && fine) {
       lenis = new Lenis({ lerp: 0.1, smoothWheel: true });
       lenis.on("scroll", ST.update);
       G.ticker.add((t) => lenis.raf(t * 1000));
@@ -597,14 +582,14 @@
 
   function setupLinks() {
     const nav = $("#nav"), toggle = $("#navToggle");
-    toggle.addEventListener("click", () => { const o = nav.classList.toggle("open"); toggle.setAttribute("aria-expanded", o); o ? lenis?.stop() : lenis?.start(); });
+    toggle.addEventListener("click", () => { const o = nav.classList.toggle("open"); toggle.setAttribute("aria-expanded", o); document.body.classList.toggle("menu-open", o); o ? lenis?.stop() : lenis?.start(); });
     document.addEventListener("click", (e) => {
       const a = e.target.closest('a[href^="#"]');
       if (!a) return;
       const id = a.getAttribute("href"), target = id === "#top" ? 0 : document.querySelector(id);
       if (target == null) return;
       e.preventDefault();
-      if (nav.classList.contains("open")) { nav.classList.remove("open"); toggle.setAttribute("aria-expanded", "false"); lenis?.start(); }
+      if (nav.classList.contains("open")) { nav.classList.remove("open"); toggle.setAttribute("aria-expanded", "false"); document.body.classList.remove("menu-open"); lenis?.start(); }
       if (lenis) lenis.scrollTo(target, { duration: 1.6 });
       else window.scrollTo({ top: target === 0 ? 0 : target.getBoundingClientRect().top + scrollY, behavior: reduce ? "auto" : "smooth" });
     });
@@ -672,14 +657,14 @@
     const lb = $("#lightbox"), img = $("img", lb), dl = $(".lb-download", lb), count = $(".lb-count", lb);
     let idx = 0, sx = null, downX = 0;
     const show = (i) => { idx = (i + galleryList.length) % galleryList.length; img.src = dl.href = galleryList[idx]; count.textContent = `${idx + 1}/${galleryList.length}`; };
-    const open = (i) => { show(i); lb.classList.add("open"); lb.setAttribute("aria-hidden", "false"); lenis?.stop(); $(".lb-close", lb).focus(); };
-    const close = () => { lb.classList.remove("open"); lb.setAttribute("aria-hidden", "true"); lenis?.start(); };
+    const open = (i) => { show(i); lb.classList.add("open"); lb.setAttribute("aria-hidden", "false"); document.body.classList.add("lb-open"); lenis?.stop(); $(".lb-close", lb).focus(); };
+    const close = () => { lb.classList.remove("open"); lb.setAttribute("aria-hidden", "true"); document.body.classList.remove("lb-open"); lenis?.start(); };
     const track = $("#track");
     track?.addEventListener("pointerdown", (e) => (downX = e.clientX));
     track?.addEventListener("click", (e) => {
       const p = e.target.closest(".panel[data-i]");
       if (!p || e.target.closest("a") || Math.abs(e.clientX - downX) > 8) return;
-      open(+p.dataset.i);
+      open(Math.max(0, galleryList.indexOf($("img", p).getAttribute("src"))));
     });
     $(".lb-prev", lb).onclick = () => show(idx - 1);
     $(".lb-next", lb).onclick = () => show(idx + 1);
@@ -695,13 +680,55 @@
     lb.addEventListener("touchend", (e) => { if (sx == null) return; const dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 50) show(idx + (dx < 0 ? 1 : -1)); sx = null; });
   }
 
+  /* ===================== MÓVIL ===================== */
+  // Barra inferior: el botón Contratar/WhatsApp aparece al salir de la portada y se esconde en Booking
+  function setupDock() {
+    const dock = $("#dock"), hero = $("#hero"), booking = $("#booking");
+    let heroIn = true, bookIn = false;
+    const upd = () => dock.classList.toggle("cta-off", heroIn || bookIn);
+    new IntersectionObserver(([e]) => { heroIn = e.intersectionRatio > 0.5; upd(); }, { threshold: [0, 0.5, 1] }).observe(hero);
+    if (!booking.hidden) new IntersectionObserver(([e]) => { bookIn = e.isIntersecting; upd(); }, { rootMargin: "0px 0px -30% 0px" }).observe(booking);
+    upd();
+  }
+  // "Desliza →" en los carruseles; desaparece en cuanto se usa
+  function setupSwipeHints() {
+    $$(".swipe-hint").forEach((hint) => {
+      const scroller = hint.previousElementSibling;
+      const inner = scroller?.classList.contains("hscroll") ? scroller : scroller;
+      if (!inner) return;
+      const done = () => hint.classList.add("used");
+      inner.addEventListener("scroll", done, { passive: true, once: true });
+      inner.addEventListener("touchstart", done, { passive: true, once: true });
+    });
+  }
+  // Android: al inclinar el móvil se mueve la luz del hielo y tu foto (iOS pide permiso, así que ahí no)
+  function setupTilt() {
+    if (!touch || reduce || !window.DeviceOrientationEvent || typeof DeviceOrientationEvent.requestPermission === "function") return;
+    let raf = 0, last = null, heroVisible = true;
+    new IntersectionObserver(([e]) => (heroVisible = e.isIntersecting)).observe($("#hero"));
+    const px = G ? G.quickTo("#personStack", "x", { duration: 0.9, ease: "power3" }) : null;
+    const py = G ? G.quickTo("#personStack", "y", { duration: 0.9, ease: "power3" }) : null;
+    addEventListener("deviceorientation", (e) => {
+      if (e.gamma == null || !heroVisible) return;
+      last = e;
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const gx = Math.max(-1, Math.min(1, last.gamma / 30)), gy = Math.max(-1, Math.min(1, ((last.beta ?? 45) - 45) / 30));
+        ice?.pointTo(0.5 + gx * 0.6, 0.38 + gy * 0.5);
+        px?.(gx * -12); py?.(gy * -8);
+      });
+    }, { passive: true });
+  }
+
   /* ===================== BUCLE (hielo + bombo) ===================== */
   function startLoop() {
-    let heroVisible = true;
-    new IntersectionObserver(([e]) => (heroVisible = e.isIntersecting)).observe($("#hero"));
+    let heroVisible = true, lastK = -1;
+    const heroEl = $("#hero");
+    new IntersectionObserver(([e]) => (heroVisible = e.isIntersecting)).observe(heroEl);
     const frame = () => {
       const k = Sound.kickLevel();
-      root.style.setProperty("--kick", k.toFixed(3));
+      if (Math.abs(k - lastK) > 0.004) { heroEl.style.setProperty("--kick", k.toFixed(3)); lastK = k; }
       if (ice && heroVisible) { ice.kick = k; ice.render(reduce ? 0 : performance.now() / 1000); }
     };
     if (G) G.ticker.add(frame); else { const raf = () => { frame(); requestAnimationFrame(raf); }; requestAnimationFrame(raf); }
@@ -711,7 +738,7 @@
   async function init() {
     await render();
     await yieldTask();
-    setupIce();
+    await setupIce();
     setupVideo();
     await yieldTask();
     setupScroll();
@@ -720,9 +747,10 @@
     setupSound();
     setupLightbox();
     startLoop();
+    setupDock();
+    setupSwipeHints();
+    setupTilt();
     playIntro(revealHero);
-    await yieldTask();
-    await buildPerson(); // etalonado + contraluz (después de arrancar, troceado para no frenar la carga)
   }
   init().catch((e) => { console.error(e); $("#intro")?.remove(); document.body.classList.remove("is-loading"); });
 })();
