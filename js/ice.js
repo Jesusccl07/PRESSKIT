@@ -114,6 +114,10 @@ window.IceLogo = function (canvas, img) {
     vec3 col = mix(deep, ice, clamp(.45 + .42 * diff + .4 * band * fres + .16 * frost, 0., 1.));
     col = mix(col, vec3(1.), cr * (.3 + .5 * diff));
     col += vec3(.75, .88, 1.) * spec * 1.3;
+    // destellos: puntitos que titilan donde da la luz, como en el hielo de verdad
+    vec2 gp = p * 70.; float gh = hash(floor(gp));
+    float tw = pow(max(0., sin(uTime * (1.5 + gh * 3.) + gh * 40.)), 12.);
+    col += vec3(1.) * step(.94, gh) * tw * smoothstep(.45, 0., length(fract(gp) - .5)) * (.4 + diff) * 1.6;
     float sweep = smoothstep(.07, 0., abs(fract(uTime * .07) * (uAspect + 2.) - 1. - (p.x - p.y * .6)));
     col += sweep * .6;
     col *= .94 + .55 * k;

@@ -8,15 +8,21 @@ window.PRESSKIT = {
 
   artist: {
     name: "CLEMENT",
-    tagline: { es: "Urbano, dembow y trap desde Ciudad Real", en: "Urbano, dembow and trap from Ciudad Real, Spain" },
-    genres: ["Urbano", "Dembow", "Trap"],
+    tagline: { es: "Reggaetón, dembow y trap desde Ciudad Real", en: "Reggaeton, dembow and trap from Ciudad Real, Spain" },
+    genres: ["Reggaetón", "Dembow", "Trap"],
     location: { es: "Ciudad Real, España", en: "Ciudad Real, Spain" },
     bpm: 128,                                   // Ritmo de las animaciones y del botón Play
   },
 
-  // Audio propio (opcional): pon aquí un MP3 de 30-60 s de un set tuyo, p. ej. "assets/audio/clement-set.mp3".
+  // Audio propio (opcional): un MP3 de 30-60 s de un set tuyo, p. ej. "assets/audio/clement-set.mp3".
   // Si está vacío, el botón Play usa un ritmo creado en el navegador.
   audio: "",
+
+  // Fondo de la portada: tu aftermovie "La noche mágica", sin sonido, desenfocado y en azul
+  heroVideo: {
+    wide: "assets/video/hero-wide.mp4", posterWide: "assets/video/hero-wide.jpg",
+    tall: "assets/video/hero-tall.mp4", posterTall: "assets/video/hero-tall.jpg",
+  },
 
   logo: {
     main: "assets/logo.webp",
@@ -29,32 +35,41 @@ window.PRESSKIT = {
   },
 
   heroImage: "assets/photos/clement-gafas.webp",
-  bioImage: "assets/photos/clement-cascos.webp",
+  aboutImage: "assets/photos/clement-cascos.webp",
   banner: "",                                     // Banner horizontal, p. ej. "assets/photos/clement-banner.jpg" (vacío = no se muestra)
 
-  bio: {
-    short: {
-      es: "CLEMENT es el DJ de Ciudad Real que convierte cada sesión en una fiesta urbana: dembow, trap y lo más fuerte del género, con energía de principio a fin.",
-      en: "CLEMENT is the Ciudad Real DJ who turns every set into an urban party: dembow, trap and the hardest hitters of the genre, with energy from start to finish.",
-    },
-    long: {
-      es: [
-        "Con más de seis años detrás de la cabina y más de 300 eventos a sus espaldas, CLEMENT se ha hecho un nombre propio en la noche urbana de Ciudad Real.",
-        "Su sonido mezcla urbano, dembow y trap: sets rápidos, transiciones con carácter y una selección pensada para que la pista no pare. Lee al público y sube la energía en el momento justo.",
-        "Ha pasado por cabinas como La Club, Sala Systema y Euphoria, y sigue creciendo con una imagen propia y una marca reconocible.",
-      ],
-      en: [
-        "With more than six years behind the decks and over 300 events played, CLEMENT has made a name for himself in Ciudad Real's urban nightlife.",
-        "His sound blends urbano, dembow and trap: fast sets, transitions with attitude and a selection built to keep the dance floor moving. He reads the crowd and lifts the energy at exactly the right moment.",
-        "He has played booths like La Club, Sala Systema and Euphoria, and keeps growing with a look and a brand of his own.",
-      ],
-    },
+  // Frase grande que se enciende al bajar
+  statement: {
+    es: "Seis años, más de 200 sesiones y una sola regla: que la pista no pare.",
+    en: "Six years, more than 200 sets and one rule: the dance floor never stops.",
   },
 
   stats: [
-    { value: 300, suffix: "+", label: { es: "eventos", en: "events" } },
-    { value: 6,   suffix: "+", label: { es: "años pinchando", en: "years behind the decks" } },
+    { value: 200, suffix: "+", label: { es: "sesiones pinchadas", en: "sets played" } },
+    { value: 6,   suffix: "+", label: { es: "años de experiencia", en: "years of experience" } },
   ],
+
+  // SOBRE MÍ
+  about: {
+    text: {
+      es: [
+        "Soy Clement, DJ de Ciudad Real. Llevo más de seis años pinchando y más de 200 sesiones a mis espaldas, y hoy soy DJ residente en La Club y en Sala Systema. También he pinchado en salas como Euphoria.",
+        "Pincho reggaetón, dembow y trap: sesiones rápidas, mezclas con carácter y la pista arriba de principio a fin. Leo al público y elijo cada tema en el momento, para que nadie se quiera ir a casa.",
+        "Fuera de la cabina creo mis propios mashups, mezclando clásicos con lo que suena ahora, y los comparto en TikTok. Me adapto a cualquier sala, a cualquier público y a cualquier equipo.",
+      ],
+      en: [
+        "I'm Clement, a DJ from Ciudad Real, Spain. I've been DJing for more than six years with over 200 sets behind me, and today I'm the resident DJ at La Club and Sala Systema. I've also played venues like Euphoria.",
+        "I play reggaeton, dembow and trap: fast sets, mixes with attitude and a dance floor that stays up from start to finish. I read the crowd and pick every track in the moment, so nobody wants to go home.",
+        "Outside the booth I make my own mashups, blending classics with what's hot right now, and share them on TikTok. I adapt to any venue, any crowd and any setup.",
+      ],
+    },
+    facts: [
+      { label: { es: "Base", en: "Based in" }, value: { es: "Ciudad Real, España", en: "Ciudad Real, Spain" } },
+      { label: { es: "Residente en", en: "Resident at" }, value: { es: "La Club y Sala Systema", en: "La Club and Sala Systema" } },
+      { label: { es: "Estilos", en: "Genres" }, value: { es: "Reggaetón, dembow y trap", en: "Reggaeton, dembow and trap" } },
+      { label: { es: "Experiencia", en: "Experience" }, value: { es: "Más de 6 años y 200 sesiones", en: "6+ years, 200+ sets" } },
+    ],
+  },
 
   photos: [
     { src: "assets/photos/clement-cascos.webp", wide: true },
@@ -64,27 +79,63 @@ window.PRESSKIT = {
     { src: "assets/photos/clement-silla.webp" },
   ],
 
+  // Redes. Los 3 últimos TikToks y las cifras se actualizan solos (GitHub Actions, cada 3 horas)
+  social: {
+    tiktokData: "data/tiktok.json",
+  },
+
   // Música: URLs de embed (SoundCloud / Spotify / YouTube / Mixcloud)
   music: [
     // { title: "Live set @ ...", embed: "https://w.soundcloud.com/player/?url=..." },
   ],
 
-  // Salas / eventos. Si añades fecha y ciudad, se muestran.
+  // Salas. resident: true añade el rótulo "Residente"
   events: [
-    { date: "", venue: "La Club",      city: "" },
-    { date: "", venue: "Sala Systema", city: "" },
-    { date: "", venue: "Euphoria",     city: "" },
+    { venue: "La Club", city: "Ciudad Real", resident: true },
+    { venue: "Sala Systema", resident: true },
+    { venue: "Euphoria" },
   ],
 
-  rider: [
-    { es: "2 Pioneer CDJ-3000 (o CDJ-2000NXS2) enlazados por Pro DJ Link", en: "2 Pioneer CDJ-3000 (or CDJ-2000NXS2) linked via Pro DJ Link" },
-    { es: "Mixer Pioneer DJM-A9 o DJM-900NXS2", en: "Pioneer DJM-A9 or DJM-900NXS2 mixer" },
-    { es: "2 monitores de cabina potentes, a la altura del DJ", en: "2 powerful booth monitors at DJ height" },
-    { es: "Micrófono inalámbrico (Shure SM58 / Beta 58) conectado al mixer", en: "Wireless mic (Shure SM58 / Beta 58) into the mixer" },
-    { es: "Cabina estable, a la altura de la cintura y sin vibraciones", en: "Stable, waist-high booth with no vibration" },
-    { es: "Toma de corriente libre en cabina", en: "Free power outlet in the booth" },
-    { es: "Agua y toalla en cabina", en: "Water and a towel in the booth" },
-  ],
+  // Rider técnico
+  rider: {
+    groups: [
+      {
+        icon: "deck",
+        title: { es: "Con lo que suelo pinchar", en: "What I usually play on" },
+        items: [
+          { es: "Denon DJ Prime 4+", en: "Denon DJ Prime 4+" },
+          { es: "O una cabina Pioneer estándar: 2 CDJ-3000 / CDJ-2000NXS2 y mixer DJM-900NXS2 / DJM-A9", en: "Or a standard Pioneer booth: 2 CDJ-3000 / CDJ-2000NXS2 and a DJM-900NXS2 / DJM-A9 mixer" },
+        ],
+      },
+      {
+        icon: "swap",
+        title: { es: "Me adapto a cualquier equipo", en: "I adapt to any setup" },
+        items: [
+          { es: "Pioneer, Denon DJ, Rane o controladora: pincho con el equipo que tenga la sala.", en: "Pioneer, Denon DJ, Rane or a controller: I play on whatever the venue has." },
+        ],
+      },
+      {
+        icon: "monitor",
+        required: true,
+        title: { es: "Imprescindible: monitores de cabina", en: "Required: booth monitors" },
+        items: [
+          { es: "2 monitores potentes en cabina, a la altura del DJ y con volumen propio. Sin monitores no se puede pinchar.", en: "2 powerful booth monitors at DJ height with their own volume. Without monitors I can't play." },
+        ],
+      },
+      {
+        icon: "case",
+        title: { es: "Si llevo mi propio equipo", en: "If I bring my own gear" },
+        items: [
+          { es: "Llevo mi Denon DJ Prime 4+.", en: "I bring my Denon DJ Prime 4+." },
+          { es: "Solo necesito una mesa estable de 1,5 m, una toma de corriente y conexión a la mesa de sonido (2 XLR o RCA).", en: "I just need a stable 1.5 m table, a power outlet and a connection to the sound system (2 XLR or RCA)." },
+        ],
+      },
+    ],
+    extras: [
+      { es: "Micrófono inalámbrico conectado al mixer", en: "Wireless mic into the mixer" },
+      { es: "Agua y toalla en cabina", en: "Water and a towel in the booth" },
+    ],
+  },
 
   contact: {
     bookingEmail: "jesusclesan@gmail.com",

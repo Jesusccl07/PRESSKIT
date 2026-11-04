@@ -13,6 +13,7 @@
   const safe = (fn, fb) => { try { return fn(); } catch (e) { return fb; } };
   const store = { get: (k) => safe(() => localStorage.getItem(k), null), set: (k, v) => safe(() => localStorage.setItem(k, v)) };
   const sess = { get: (k) => safe(() => sessionStorage.getItem(k), null), set: (k, v) => safe(() => sessionStorage.setItem(k, v)) };
+  const yieldTask = () => new Promise((r) => setTimeout(r, 0)); // trocea el trabajo en tareas cortas
   if (G && ST) {
     G.registerPlugin(ST);
     root.classList.add("gsap");
@@ -28,13 +29,17 @@
   const tr = (v) => (v && typeof v === "object" && !Array.isArray(v) ? v[lang] ?? v.es : v);
   const I18N = {
     es: {
-      "nav.bio": "Bio", "nav.photos": "Fotos", "nav.music": "Música", "nav.venues": "Salas", "nav.rider": "Rider", "nav.booking": "Booking",
+      "nav.about": "Sobre mí", "nav.photos": "Fotos", "nav.social": "TikTok", "nav.music": "Música", "nav.venues": "Salas", "nav.rider": "Rider", "nav.booking": "Booking",
       "hero.book": "Contratar", "hero.photos": "Ver fotos", "hero.listen": "Escuchar",
-      "bio.title": "Bio",
+      "about.title": "Sobre mí",
       "photos.title": "Fotos de prensa", "photos.sub": "Sin fondo, listas para carteles y flyers. Toca una foto para ampliarla.",
       "photos.download": "Descargar", "photos.dlTitle": "Material para promotores",
       "photos.dlText": "Logos y fotos en alta calidad con fondo transparente, y la ficha en PDF.",
-      "music.title": "Música", "venues.title": "Ha pinchado en", "rider.title": "Rider técnico",
+      "social.title": "Lo último en TikTok", "social.sub": "Mis tres últimos vídeos. Se actualiza solo cada vez que subo uno nuevo.",
+      "social.followers": "seguidores", "social.likes": "me gusta", "social.views": "visualizaciones",
+      "social.follow": "Seguir en TikTok", "social.ig": "Instagram", "social.open": "Abrir en TikTok", "social.play": "Reproducir vídeo",
+      "social.updated": "Actualizado", "social.sound": "sonido original",
+      "music.title": "Música", "venues.title": "Ha pinchado en", "venues.resident": "Residente", "rider.title": "Rider técnico",
       "booking.title": "Reserva una fecha",
       "booking.text": "Cuéntame tu evento y te respondo lo antes posible. El mensaje sale ya redactado por WhatsApp o por email.",
       "form.name": "Nombre", "form.event": "Sala o evento", "form.city": "Ciudad", "form.date": "Fecha",
@@ -44,17 +49,20 @@
       "contact.phone": "Teléfono", "contact.whatsapp": "WhatsApp", "contact.waValue": "Escríbeme", "contact.mail": "Email",
       "contact.listen": "Escuchar", "contact.watch": "Ver vídeos",
       "footer.rights": "Todos los derechos reservados.", "footer.top": "Volver arriba",
-      "sound.play": "Play", "sound.pause": "Pausa", "cursor.view": "Ver", "lang.label": "View in English",
-      "loc": "Ciudad Real, España",
+      "sound.play": "Play", "sound.pause": "Pausa", "cursor.view": "Ver", "cursor.play": "Play", "lang.label": "View in English",
     },
     en: {
-      "nav.bio": "Bio", "nav.photos": "Photos", "nav.music": "Music", "nav.venues": "Venues", "nav.rider": "Rider", "nav.booking": "Booking",
+      "nav.about": "About", "nav.photos": "Photos", "nav.social": "TikTok", "nav.music": "Music", "nav.venues": "Venues", "nav.rider": "Rider", "nav.booking": "Booking",
       "hero.book": "Book CLEMENT", "hero.photos": "See photos", "hero.listen": "Listen",
-      "bio.title": "Bio",
+      "about.title": "About me",
       "photos.title": "Press photos", "photos.sub": "Background-free, ready for posters and flyers. Tap a photo to view it.",
       "photos.download": "Download", "photos.dlTitle": "Promoter assets",
       "photos.dlText": "High-res logos and photos with transparent backgrounds, plus the PDF one-sheet.",
-      "music.title": "Music", "venues.title": "Has played at", "rider.title": "Technical rider",
+      "social.title": "Latest on TikTok", "social.sub": "My three latest videos. Updates by itself every time I post a new one.",
+      "social.followers": "followers", "social.likes": "likes", "social.views": "views",
+      "social.follow": "Follow on TikTok", "social.ig": "Instagram", "social.open": "Open in TikTok", "social.play": "Play video",
+      "social.updated": "Updated", "social.sound": "original sound",
+      "music.title": "Music", "venues.title": "Has played at", "venues.resident": "Resident", "rider.title": "Technical rider",
       "booking.title": "Book a date",
       "booking.text": "Tell me about your event and I'll get back to you soon. Your message goes out ready-written via WhatsApp or email.",
       "form.name": "Name", "form.event": "Venue or event", "form.city": "City", "form.date": "Date",
@@ -64,13 +72,12 @@
       "contact.phone": "Phone", "contact.whatsapp": "WhatsApp", "contact.waValue": "Message me", "contact.mail": "Email",
       "contact.listen": "Listen", "contact.watch": "Watch videos",
       "footer.rights": "All rights reserved.", "footer.top": "Back to top",
-      "sound.play": "Play", "sound.pause": "Pause", "cursor.view": "View", "lang.label": "Ver en español",
+      "sound.play": "Play", "sound.pause": "Pause", "cursor.view": "View", "cursor.play": "Play", "lang.label": "Ver en español",
     },
   };
   const T = (k) => I18N[lang][k] ?? I18N.es[k] ?? k;
-  if (lang === "en") {
-    $('meta[name="description"]').content = "Official press kit of CLEMENT, urbano, dembow and trap DJ from Ciudad Real, Spain: bio, press photos, logos, technical rider and booking.";
-  }
+  if (lang === "en") $('meta[name="description"]').content = "Official press kit of CLEMENT, resident DJ at La Club and Sala Systema (Ciudad Real, Spain). Reggaeton, dembow and trap. 6+ years, 200+ sets. Photos, logos, technical rider and booking.";
+  const num = (n) => new Intl.NumberFormat(lang === "es" ? "es-ES" : "en-GB", { notation: n >= 1000 ? "compact" : "standard", maximumFractionDigits: 1 }).format(n);
 
   const probe = (src) => new Promise((res) => {
     if (!src) return res(null);
@@ -80,7 +87,7 @@
   });
   const hideSection = (id) => { const s = document.getElementById(id); if (s) s.hidden = true; };
 
-  /* ===================== CONTENIDO ===================== */
+  /* ===================== ICONOS ===================== */
   const ICONS = {
     phone: '<path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/>',
     mail: '<path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4-8 5-8-5V6l8 5 8-5z"/>',
@@ -90,17 +97,30 @@
     soundcloud: '<path d="M1 14.5c0 1 .5 1.7 1 1.7s1-.7 1-1.7-.5-1.7-1-1.7-1 .7-1 1.7zm3-2.5v5h1v-5zm2-1.5v6.5h1v-6.5zm2-1v7.5h1V9.5zm2-1.5v9h1V8zm2.5-1.5V17h7a3.5 3.5 0 0 0 0-7 3.4 3.4 0 0 0-1.3.3A5.5 5.5 0 0 0 12.5 6.5z"/>',
     spotify: '<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.6 14.4a.6.6 0 0 1-.9.2c-2.4-1.4-5.3-1.8-8.8-1a.6.6 0 1 1-.3-1.2c3.8-.9 7.1-.5 9.8 1.1.3.2.4.6.2.9zm1.2-2.7a.8.8 0 0 1-1.1.3c-2.7-1.7-6.9-2.2-10.1-1.2a.8.8 0 1 1-.5-1.5c3.7-1.1 8.3-.6 11.4 1.3.4.2.5.7.3 1.1zm.1-2.8C14.7 9 9.4 8.8 6.3 9.7a1 1 0 1 1-.6-1.8c3.5-1.1 9.4-.9 13.1 1.3a1 1 0 0 1-.9 1.7z"/>',
     youtube: '<path d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12 31 31 0 0 0 1 16.8a3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .5-4.8 31 31 0 0 0-.5-4.8zM9.7 15V9l5.8 3z"/>',
+    heart: '<path d="M12 21s-7.5-4.6-9.6-9.2C.8 8.2 3 4.5 6.6 4.5c2.1 0 3.5 1.2 4.4 2.6.9-1.4 2.3-2.6 4.4-2.6 3.6 0 5.8 3.7 4.2 7.3C19.5 16.4 12 21 12 21z"/>',
+    comment: '<path d="M12 3C6.5 3 2 6.8 2 11.5c0 2.6 1.4 4.9 3.6 6.5L5 22l4.3-2.3c.9.2 1.8.3 2.7.3 5.5 0 10-3.8 10-8.5S17.5 3 12 3z"/>',
+    eye: '<path d="M12 5C6.5 5 2.3 8.6 1 12c1.3 3.4 5.5 7 11 7s9.7-3.6 11-7c-1.3-3.4-5.5-7-11-7zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/>',
+    play: '<path d="M7 4.5v15l13-7.5z"/>',
     pin: '<path d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/>',
   };
   const svg = (k) => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]}</svg>`;
+  // Iconos de línea para el rider (64×64)
+  const GEAR = {
+    deck: '<rect x="3" y="15" width="58" height="34" rx="3"/><circle cx="16" cy="35" r="8.5"/><circle cx="16" cy="35" r="2"/><circle cx="48" cy="35" r="8.5"/><circle cx="48" cy="35" r="2"/><rect x="26" y="19" width="12" height="9" rx="1"/><path d="M29 33v11M35 33v11M7 20h6M51 20h6"/>',
+    swap: '<rect x="5" y="9" width="22" height="14" rx="2"/><rect x="37" y="41" width="22" height="14" rx="2"/><circle cx="12" cy="16" r="3"/><circle cx="52" cy="48" r="3"/><path d="M34 16h18l-6-6M52 16l-6 6M30 48H12l6 6M12 48l6-6"/>',
+    monitor: '<rect x="15" y="4" width="34" height="56" rx="3"/><circle cx="32" cy="39" r="11"/><circle cx="32" cy="39" r="4"/><circle cx="32" cy="17" r="5"/><circle cx="32" cy="17" r="1.5"/>',
+    case: '<rect x="5" y="19" width="54" height="35" rx="3"/><path d="M23 19v-6h18v6M5 31h54M13 31v6M51 31v6"/><path d="M5 25h6v-6M59 25h-6v-6M5 48h6v6M59 48h-6v6"/>',
+  };
+  const gear = (k) => `<svg viewBox="0 0 64 64" aria-hidden="true">${GEAR[k] || GEAR.deck}</svg>`;
   const ext = (href) => (href.startsWith("http") ? ' target="_blank" rel="noopener"' : "");
+
   const contactItems = () => {
     const k = C.contact;
     return [
       ["phone", T("contact.phone"), k.phone, `tel:${String(k.phone).replace(/[^\d+]/g, "")}`],
       ["whatsapp", T("contact.whatsapp"), k.whatsapp && T("contact.waValue"), `https://wa.me/${k.whatsapp}`],
       ["mail", T("contact.mail"), k.bookingEmail, `mailto:${k.bookingEmail}`],
-      ["instagram", "Instagram", k.instagram && `@${k.instagram}`, `https://instagram.com/${k.instagram}`],
+      ["instagram", "Instagram", k.instagram && `@${k.instagram}`, `https://www.instagram.com/${k.instagram}/`],
       ["tiktok", "TikTok", k.tiktok && `@${k.tiktok}`, `https://www.tiktok.com/@${k.tiktok}`],
       ["soundcloud", "SoundCloud", k.soundcloud && T("contact.listen"), k.soundcloud],
       ["spotify", "Spotify", k.spotify && T("contact.listen"), k.spotify],
@@ -109,25 +129,26 @@
   };
   const music = () => (C.music || []).filter((m) => m && !isPh(m.embed));
 
-  let logoImg = null, galleryList = [];
+  let logoImg = null, personImg = null, galleryList = [];
 
+  /* ===================== CONTENIDO ===================== */
   async function render() {
     $$("[data-i18n]").forEach((el) => (el.textContent = T(el.dataset.i18n)));
     $$("#langBtn span").forEach((s) => s.classList.toggle("on", s.dataset.l === lang));
     $("#langBtn").setAttribute("aria-label", T("lang.label"));
     $("#soundLabel").textContent = T("sound.play");
 
-    const [logo, hero, bioImg, banner] = await Promise.all([probe(C.logo.main), probe(C.heroImage), probe(C.bioImage), probe(C.banner)]);
-    logoImg = logo;
+    const [logo, hero, aboutImg, banner] = await Promise.all([probe(C.logo.main), probe(C.heroImage), probe(C.aboutImage), probe(C.banner)]);
+    logoImg = logo; personImg = hero;
     const name = esc(C.artist.name);
     if (logo) {
       $("#logoFallback").src = C.logo.main;
       $("#navLogo").innerHTML = `<img src="${C.logo.main}" alt="${name}">`;
       $("#footerLogo").innerHTML = `<img src="${C.logo.main}" alt="">`;
     }
-    if (hero) $("#heroPerson").innerHTML = `<img src="${C.heroImage}" alt="" fetchpriority="high">`;
+    if (hero) $("#personStack").innerHTML = `<img class="person-base" src="${C.heroImage}" alt="" fetchpriority="high">`;
 
-    // Hero
+    // Portada
     const tag = tr(C.artist.tagline);
     if (isPh(tag)) $("#tagline").remove(); else $("#tagline").textContent = tag;
     const acts = [];
@@ -137,10 +158,10 @@
     $("#heroActions").innerHTML = acts.join("");
 
     // Frase + cifras
-    const short = tr(C.bio.short);
+    const statement = tr(C.statement);
     const stats = (C.stats || []).filter((s) => +s.value > 0);
-    if (isPh(short) && !stats.length) hideSection("statement");
-    if (!isPh(short)) $("#statementText").innerHTML = short.split(/\s+/).map((w) => `<span class="w">${esc(w)}</span>`).join(" ");
+    if (isPh(statement) && !stats.length) hideSection("statement");
+    if (!isPh(statement)) $("#statementText").innerHTML = statement.split(/\s+/).map((w) => `<span class="w">${esc(w)}</span>`).join(" ");
     else $("#statementText").remove();
     if (stats.length) $("#stats").innerHTML = stats.map((s) =>
       `<div class="stat"><span class="stat-num" data-count="${+s.value}" data-suffix="${esc(s.suffix)}">${+s.value}${esc(s.suffix)}</span><span class="stat-label">${esc(tr(s.label))}</span></div>`).join("");
@@ -148,14 +169,15 @@
 
     if (banner) { $("#bannerImg").innerHTML = `<img src="${C.banner}" alt="${name}">`; $("#banner").hidden = false; }
 
-    // Bio
-    const long = (tr(C.bio.long) || []).filter((p) => !isPh(p));
-    if (!long.length) hideSection("bio");
+    // Sobre mí
+    const about = (tr(C.about?.text) || []).filter((p) => !isPh(p));
+    if (!about.length) hideSection("about");
     else {
-      const loc = tr(C.artist.location);
-      $("#bioText").innerHTML = long.map((p) => `<p>${esc(p)}</p>`).join("") +
-        (isPh(loc) ? "" : `<p class="bio-location">${svg("pin")}${esc(loc)}</p>`);
-      if (bioImg) $("#bioPhoto").innerHTML = `<img src="${C.bioImage}" alt="${name}">`; else $("#bioPhoto").remove();
+      $("#aboutText").innerHTML = about.map((p) => `<p>${esc(p)}</p>`).join("");
+      const facts = (C.about.facts || []).filter((f) => !isPh(tr(f.value)));
+      if (facts.length) $("#aboutFacts").innerHTML = facts.map((f) => `<div><dt>${esc(tr(f.label))}</dt><dd>${esc(tr(f.value))}</dd></div>`).join("");
+      else $("#aboutFacts").remove();
+      if (aboutImg) $("#aboutPhoto").innerHTML = `<img src="${C.aboutImage}" alt="${name}">`; else $("#aboutPhoto").remove();
     }
 
     // Fotos
@@ -167,28 +189,42 @@
       `<a class="btn ${l.primary ? "btn-primary" : "btn-ghost"}" href="${l.src}" download>${esc(tr(l.label))}</a>`).join("");
     const panels = photos.map((p, i) => `
       <figure class="panel${p.wide ? " wide" : ""}" data-i="${i}" data-cursor="${T("cursor.view")}">
-        <div class="panel-frame liquid"><img src="${p.src}" alt="${name}, foto ${i + 1}" loading="lazy" draggable="false"></div>
+        <div class="panel-frame"><div class="panel-clip liquid"><img src="${p.src}" alt="${name}, foto ${i + 1}" loading="lazy" draggable="false"></div></div>
         <figcaption><span>${i + 1}/${photos.length}</span><a href="${p.src}" download>${T("photos.download")}</a></figcaption>
       </figure>`).join("");
     const dlPanel = dls ? `<div class="panel panel-dl">${logo ? `<img src="${C.logo.main}" alt="">` : ""}<h3>${T("photos.dlTitle")}</h3><p>${T("photos.dlText")}</p><div class="dl-list">${dls}</div></div>` : "";
     if (!panels && !dlPanel) hideSection("photos"); else $("#track").innerHTML = panels + dlPanel;
+
+    await renderSocial();
 
     // Música
     const mus = music();
     if (!mus.length) hideSection("music");
     else $("#musicGrid").innerHTML = mus.map((m) => `<iframe src="${esc(m.embed)}" loading="lazy" title="${esc(m.title)}" allow="autoplay; encrypted-media"></iframe>`).join("");
 
-    // Salas
+    // Salas como rótulos de neón (una letra "tocada" que parpadea, como en los neones de verdad)
     const events = (C.events || []).filter((e) => e && !isPh(e.venue));
     if (!events.length) hideSection("venues");
     else $("#venueList").innerHTML = events.map((e) => {
+      const letters = [...e.venue];
+      const candidates = letters.map((c, i) => (c.trim() ? i : -1)).filter((i) => i >= 0);
+      const faulty = candidates[Math.floor(Math.random() * candidates.length)];
+      const word = letters.map((c, i) => (c === " " ? " " : `<span class="l${i === faulty ? " faulty" : ""}">${esc(c)}</span>`)).join("");
       const meta = [e.date, e.city].filter((v) => !isPh(v)).map(esc).join(", ");
-      return `<li><span class="venue">${esc(e.venue)}</span>${meta ? `<span class="venue-meta">${meta}</span>` : ""}</li>`;
+      return `<li><div class="sign-plate"><i class="screw"></i><i class="screw"></i><i class="screw"></i><i class="screw"></i>
+        <span class="sign" aria-label="${esc(e.venue)}">${word}</span>${e.resident ? `<span class="sign-sub">${T("venues.resident")}</span>` : ""}</div>
+        ${meta ? `<p class="sign-meta">${meta}</p>` : ""}</li>`;
     }).join("");
 
     // Rider
-    const rider = (C.rider || []).map(tr).filter((r) => !isPh(r));
-    if (!rider.length) hideSection("rider"); else $("#riderList").innerHTML = rider.map((r) => `<li>${esc(r)}</li>`).join("");
+    const groups = (C.rider?.groups || []).map((g) => ({ ...g, items: (g.items || []).map(tr).filter((t) => !isPh(t)) })).filter((g) => g.items.length);
+    if (!groups.length) hideSection("rider");
+    else {
+      $("#riderGrid").innerHTML = groups.map((g) =>
+        `<div class="rider-item${g.required ? " required" : ""}">${gear(g.icon)}<div><h3>${esc(tr(g.title))}</h3>${g.items.map((t) => `<p>${esc(t)}</p>`).join("")}</div></div>`).join("");
+      const extras = (C.rider.extras || []).map(tr).filter((t) => !isPh(t));
+      if (extras.length) $("#riderExtras").textContent = extras.join(". ") + "."; else $("#riderExtras").remove();
+    }
 
     // Booking
     const items = contactItems();
@@ -201,8 +237,67 @@
       setupForm();
     }
     $("#year").textContent = new Date().getFullYear();
-
     $$("#navLinks a").forEach((a) => { const t = document.querySelector(a.getAttribute("href")); if (!t || t.hidden) a.hidden = true; });
+  }
+
+  /* ===================== TIKTOK ===================== */
+  async function renderSocial() {
+    const handle = C.contact.tiktok, ig = C.contact.instagram;
+    if (isPh(handle)) return hideSection("social");
+    let data = null;
+    try {
+      const bucket = Math.floor(Date.now() / 6e5); // evita la caché vieja (cada 10 min)
+      const r = await fetch(`${C.social.tiktokData}?v=${bucket}`, { cache: "no-cache" });
+      if (r.ok) data = await r.json();
+    } catch (e) { /* sin datos: se usa el widget oficial */ }
+
+    const p = data?.profile || {};
+    const stats = [[p.followers, T("social.followers")], [p.likes, T("social.likes")], [data?.totals?.views, T("social.views")]].filter(([v]) => +v > 0);
+    if (stats.length) $("#socialStats").innerHTML = stats.map(([v, l]) => `<div><dt>${esc(l)}</dt><dd data-num="${+v}">${num(+v)}</dd></div>`).join("");
+    else $("#socialStats").remove();
+    $("#socialActions").innerHTML =
+      `<a class="btn btn-primary" href="https://www.tiktok.com/@${esc(handle)}" target="_blank" rel="noopener">${svg("tiktok")}${T("social.follow")}</a>` +
+      (isPh(ig) ? "" : `<a class="btn btn-ghost" href="https://www.instagram.com/${esc(ig)}/" target="_blank" rel="noopener">${svg("instagram")}@${esc(ig)}</a>`);
+    if (data?.updated) {
+      const d = new Date(data.updated).toLocaleDateString(lang === "es" ? "es-ES" : "en-GB", { day: "numeric", month: "long" });
+      $(".social-info").insertAdjacentHTML("beforeend", `<p class="social-updated">${T("social.updated")}: ${esc(d)}</p>`);
+    }
+
+    const vids = (data?.latest || []).filter((v) => v.id && v.cover).slice(0, 3);
+    if (!vids.length) {
+      // Widget oficial del perfil (siempre muestra lo último)
+      $("#phones").innerHTML = `<div class="tiktok-fallback"><blockquote class="tiktok-embed" cite="https://www.tiktok.com/@${esc(handle)}" data-unique-id="${esc(handle)}" data-embed-type="creator" style="max-width:780px;min-width:288px"><section><a target="_blank" rel="noopener" href="https://www.tiktok.com/@${esc(handle)}">@${esc(handle)}</a></section></blockquote></div>`;
+      const s = document.createElement("script"); s.async = true; s.src = "https://www.tiktok.com/embed.js"; document.body.appendChild(s);
+      return;
+    }
+    const rtf = new Intl.RelativeTimeFormat(lang === "es" ? "es" : "en", { numeric: "auto" });
+    const ago = (ts) => {
+      const days = Math.round((ts * 1000 - Date.now()) / 864e5);
+      return Math.abs(days) < 1 ? rtf.format(Math.round((ts * 1000 - Date.now()) / 36e5), "hour") : Math.abs(days) < 30 ? rtf.format(days, "day") : rtf.format(Math.round(days / 30), "month");
+    };
+    const clock = new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+    $("#phones").innerHTML = vids.map((v) => {
+      const caption = (v.description || "").replace(/\s+/g, " ").trim();
+      return `<figure class="phone" data-id="${esc(v.id)}" data-cursor="${T("cursor.play")}">
+        <div class="phone-body"><div class="phone-screen">
+          <span class="phone-island"></span>
+          <div class="phone-status"><span>${clock}</span><svg viewBox="0 0 34 12" aria-hidden="true"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="1" width="3" height="11" rx="1"/><rect x="22" y="1" width="10" height="10" rx="2.5" fill="none" stroke="#fff" stroke-width="1.2"/><rect x="23.6" y="2.6" width="6.4" height="6.8" rx="1.4"/></svg></div>
+          <img class="phone-cover" src="${esc(v.cover)}" alt="" loading="lazy">
+          <div class="phone-rail"><span>${svg("heart")}${num(v.likes || 0)}</span><span>${svg("comment")}${num(v.comments || 0)}</span><span>${svg("eye")}${num(v.views || 0)}</span></div>
+          <div class="phone-ui"><b>@${esc(handle)}</b><p>${esc(caption)}</p></div>
+          <button class="phone-play" type="button" aria-label="${T("social.play")}">${svg("play")}</button>
+        </div></div>
+        <figcaption class="phone-meta">${v.timestamp ? esc(ago(v.timestamp)) + " · " : ""}<a href="${esc(v.url)}" target="_blank" rel="noopener">${T("social.open")}</a></figcaption>
+      </figure>`;
+    }).join("");
+    // Al tocar: el reproductor oficial de TikTok dentro del móvil
+    $$("#phones .phone").forEach((ph) => ph.addEventListener("click", (e) => {
+      if (e.target.closest("a") || ph.classList.contains("playing")) return;
+      ph.classList.add("playing");
+      const src = `https://www.tiktok.com/player/v1/${ph.dataset.id}?autoplay=1&loop=1&controls=1&progress_bar=1&play_button=1&volume_control=1&fullscreen_button=1&timestamp=0&music_info=0&description=0&rel=0&native_context_menu=0&closed_caption=0`;
+      $(".phone-screen", ph).insertAdjacentHTML("beforeend", `<iframe src="${src}" title="TikTok" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen></iframe>`);
+      if (Sound.on) $("#soundBtn").click(); // que no se pisen los audios
+    }));
   }
 
   function setupForm() {
@@ -232,6 +327,76 @@
     });
   }
 
+  /* ===================== REALISMO DE LA PORTADA ===================== */
+  // Tu foto: etalonado frío + luz de contorno azul calculada del borde de la silueta
+  async function buildPerson() {
+    if (!personImg) return;
+    const W = personImg.naturalWidth, H = personImg.naturalHeight;
+    const mk = () => { const c = document.createElement("canvas"); c.width = W; c.height = H; return c; };
+    const baseC = mk(), bctx = baseC.getContext("2d", { willReadFrequently: true });
+    const blurC = mk(), blctx = blurC.getContext("2d", { willReadFrequently: true });
+    if (!("filter" in blctx)) return;
+    blctx.filter = `blur(${Math.max(4, Math.round(W / 64))}px)`;
+    if (blctx.filter === "none") return;
+    let d, b;
+    try {
+      bctx.drawImage(personImg, 0, 0); blctx.drawImage(personImg, 0, 0);
+      d = bctx.getImageData(0, 0, W, H); b = blctx.getImageData(0, 0, W, H).data;
+    } catch (e) { return; } // file:// no deja leer píxeles
+    const px = d.data, rimC = mk(), rctx = rimC.getContext("2d"), rim = rctx.createImageData(W, H), rp = rim.data;
+    const L1x = -0.55, L1y = -0.83, L2x = 0.55, L2y = -0.83, row = W * 4;
+    let slice = performance.now();
+    for (let y = 1; y < H - 1; y++) {
+      // trocea el cálculo para no bloquear la página (tareas de ~12 ms)
+      if (performance.now() - slice > 12) { await yieldTask(); slice = performance.now(); }
+      const top = 1 - (y / H) * 0.55;
+      for (let x = 1; x < W - 1; x++) {
+        const i = y * row + x * 4, a = px[i + 3];
+        if (!a) continue;
+        const R = px[i], Gc = px[i + 1], B = px[i + 2];
+        const lum = (R * 0.299 + Gc * 0.587 + B * 0.114) / 255, sh = 1 - lum;
+        const gray = lum * 255;
+        // sombras hacia el azul noche, ligera desaturación
+        px[i] = Math.min(255, (R * 0.78 + gray * 0.22) * 0.9 + 4 * sh);
+        px[i + 1] = Math.min(255, (Gc * 0.78 + gray * 0.22) * 0.94 + 12 * sh);
+        px[i + 2] = Math.min(255, (B * 0.78 + gray * 0.22) * 1.02 + 30 * sh);
+        // contraluz: banda interior del borde, más fuerte donde mira hacia los focos (arriba y laterales)
+        const A = a / 255, ba = b[i + 3] / 255;
+        const edge = Math.min(1, Math.max(0, (A - ba) * 2.8));
+        if (edge < 0.02) continue;
+        const gx = (b[i + 7] - b[i - 1]) / 255, gy = (b[i + row + 3] - b[i - row + 3]) / 255;
+        const len = Math.hypot(gx, gy) + 1e-4, nx = -gx / len, ny = -gy / len;
+        const w = Math.max(0, nx * L1x + ny * L1y) + Math.max(0, nx * L2x + ny * L2y);
+        const k = edge * (0.12 + 0.8 * w) * top;
+        rp[i] = 160; rp[i + 1] = 205; rp[i + 2] = 255; rp[i + 3] = Math.min(200, k * 170 * A);
+      }
+    }
+    bctx.putImageData(d, 0, 0); rctx.putImageData(rim, 0, 0);
+    baseC.className = "person-base"; rimC.className = "person-rim";
+    const stack = $("#personStack");
+    stack.innerHTML = ""; stack.append(baseC, rimC);
+  }
+
+  // Vídeo de fondo: horizontal o vertical según la pantalla; se pausa fuera de la portada
+  function setupVideo() {
+    const v = $("#heroVideo"), hv = C.heroVideo;
+    if (!hv) return v.remove();
+    const pick = () => (innerHeight > innerWidth ? "tall" : "wide");
+    let current = null;
+    const load = () => {
+      const k = pick();
+      if (k === current) return;
+      current = k;
+      v.poster = k === "tall" ? hv.posterTall : hv.posterWide;
+      if (reduce || navigator.connection?.saveData) return; // solo la imagen fija
+      v.src = k === "tall" ? hv.tall : hv.wide;
+      v.play().catch(() => {});
+    };
+    load();
+    let t; addEventListener("resize", () => { clearTimeout(t); t = setTimeout(load, 300); });
+    new IntersectionObserver(([e]) => { if (!v.src) return; e.isIntersecting ? v.play().catch(() => {}) : v.pause(); }).observe($("#hero"));
+  }
+
   /* ===================== GRIETAS (SVG procedural) ===================== */
   function crackPaths(svgEl, cx, cy, W, H, branches, reach) {
     svgEl.setAttribute("viewBox", `0 0 ${W} ${H}`);
@@ -248,10 +413,7 @@
       }
       paths.push([d, width]);
     };
-    for (let b = 0; b < branches; b++) {
-      const ang = (b / branches) * Math.PI * 2 + (R() - 0.5) * 0.5;
-      grow(cx, cy, ang, reach * (0.6 + R() * 0.6), 0, 1.6 + R());
-    }
+    for (let b = 0; b < branches; b++) grow(cx, cy, (b / branches) * Math.PI * 2 + (R() - 0.5) * 0.5, reach * (0.6 + R() * 0.6), 0, 1.6 + R());
     svgEl.innerHTML = paths.map(([d, w]) => `<path d="${d}" stroke-width="${w.toFixed(2)}"/>`).join("");
     const els = $$("path", svgEl);
     els.forEach((p) => { const l = p.getTotalLength(); p.style.strokeDasharray = l; p.style.strokeDashoffset = l; });
@@ -263,14 +425,12 @@
   function setupIce() {
     const box = $("#heroLogo"), canvas = $("#iceCanvas");
     if (logoImg) ice = window.IceLogo ? window.IceLogo(canvas, logoImg) : null;
-    if (ice) {
-      box.style.setProperty("--logo-ar", ice.aspect);
-    } else {
+    if (ice) box.style.setProperty("--logo-ar", ice.aspect);
+    else {
       canvas.remove(); box.classList.add("fallback");
       if (logoImg) box.style.setProperty("--logo-ar", logoImg.naturalWidth / logoImg.naturalHeight);
     }
   }
-  // Rectángulo donde se dibuja el logo (sin el margen del halo)
   function logoRect() {
     const r = $("#heroLogo").getBoundingClientRect();
     const px = ice ? ice.pad.x : 0.07, py = ice ? ice.pad.y : 0.07;
@@ -292,7 +452,6 @@
     function assemble() {
       const r = logoRect(), wrap = $("#introShards");
       Object.assign(wrap.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px", height: r.height + "px" });
-      // Triangulación con jitter -> esquirlas
       const cols = innerWidth < 700 ? 6 : 9, rows = 3, P = [];
       for (let y = 0; y <= rows; y++) for (let x = 0; x <= cols; x++) {
         const jx = x > 0 && x < cols ? (Math.random() - 0.5) * 0.7 : 0, jy = y > 0 && y < rows ? (Math.random() - 0.5) * 0.7 : 0;
@@ -330,15 +489,13 @@
     }
   }
 
-  // Entrada del resto de la portada
   function revealHero(fromIntro) {
     document.body.classList.remove("is-loading");
     if (ice && !fromIntro) ice.on = 1;
     const neon = $("#heroNeon");
     if (!animated) { neon.classList.add("on"); return; }
-    const d = fromIntro ? 0.15 : 0;
-    G.timeline({ delay: d })
-      .from("#heroPerson img", { yPercent: 12, opacity: 0, duration: 1.4, ease: "expo.out" }, 0)
+    G.timeline({ delay: fromIntro ? 0.15 : 0 })
+      .from("#personStack", { yPercent: 12, opacity: 0, duration: 1.4, ease: "expo.out" }, 0)
       .add(() => neon.classList.add("on"), 0.35)
       .from("#heroFoot > *", { y: 30, opacity: 0, duration: 1, ease: "expo.out", stagger: 0.1 }, 0.5)
       .from("#nav > *", { y: -30, opacity: 0, duration: 0.9, ease: "expo.out", stagger: 0.06, clearProps: "transform,opacity" }, 0.6)
@@ -374,13 +531,30 @@
       .to("#heroLogo", { y: () => -innerHeight * 0.3, scale: 0.72, ease: "none" }, 0)
       .to("#heroPerson", { scale: 1.18, y: () => innerHeight * 0.04, ease: "none" }, 0)
       .to("#heroNeon", { scale: 1.8, opacity: 0, ease: "none" }, 0)
+      .to("#heroVideo", { scale: 1.15, ease: "none" }, 0)
       .to("#heroFoot", { opacity: 0, y: -60, ease: "none", duration: 0.35 }, 0)
       .to(".hero-scroll", { opacity: 0, duration: 0.1 }, 0)
       .to(cracks, { strokeDashoffset: 0, ease: "power1.in", stagger: 0.01, duration: 0.5 }, 0.2)
       .to("#heroLogo", { opacity: 0, filter: "blur(10px)", ease: "none", duration: 0.3 }, 0.62)
-      .to("#heroPerson", { opacity: 0, ease: "none", duration: 0.3 }, 0.7)
-      .to(".hero-bg", { opacity: 0.2, ease: "none", duration: 0.3 }, 0.7)
+      .to(["#heroPerson", ".hero-fog", ".hero-beams"], { opacity: 0, ease: "none", duration: 0.3 }, 0.7)
+      .fromTo("#heroVideo", { opacity: 0.62 }, { opacity: 0.08, ease: "none", duration: 0.3, immediateRender: false }, 0.7)
+      .to(".hero-bg", { opacity: 0.1, ease: "none", duration: 0.3 }, 0.7)
       .to("#heroCracks", { opacity: 0, ease: "none", duration: 0.15 }, 0.9);
+
+    // 1b. Galería horizontal (escritorio). Se crea antes que lo de debajo para que todo
+    //     calcule bien su posición con el espacio que ocupa el pin.
+    const mm = G.matchMedia();
+    mm.add("(min-width: 901px)", () => {
+      const track = $("#track"), sec = $("#photos");
+      if (!track || sec.hidden) return;
+      const dist = () => Math.max(0, track.scrollWidth - innerWidth);
+      const move = G.to(track, { x: () => -dist(), ease: "none",
+        scrollTrigger: { trigger: sec, start: "top top", end: () => "+=" + dist(), pin: true, scrub: 0.8, invalidateOnRefresh: true } });
+      $$(".panel-clip img", track).forEach((img) => G.fromTo(img, { xPercent: -6 }, { xPercent: 6, ease: "none",
+        scrollTrigger: { trigger: img.closest(".panel"), containerAnimation: move, start: "left right", end: "right left", scrub: true } }));
+      // Móviles de TikTok: se abren en abanico
+      if ($$("#phones .phone").length === 3) G.from("#phones .phone", { y: 140, opacity: 0, rotationX: 28, duration: 1.3, ease: "expo.out", stagger: 0.12, scrollTrigger: { trigger: "#phones", start: "top 80%" } });
+    });
 
     // 2. Títulos: entran cortados en diagonal, como un golpe del logo
     $$(".h2").forEach((h) => G.fromTo(h,
@@ -392,46 +566,35 @@
     if (words.length) G.fromTo(words, { opacity: 0.38 }, { opacity: 1, ease: "none", stagger: 0.1,
       scrollTrigger: { trigger: "#statementText", start: "top 78%", end: "bottom 45%", scrub: true } });
 
-    // 4. Cifras que cuentan
-    $$("[data-count]").forEach((el) => {
-      const o = { v: 0 }, target = +el.dataset.count, suf = el.dataset.suffix;
-      el.textContent = "0" + suf;
-      ST.create({ trigger: el, start: "top 85%", once: true, onEnter: () =>
-        G.to(o, { v: target, duration: 2, ease: "power3.out", onUpdate: () => (el.textContent = Math.round(o.v) + suf) }) });
+    // 4. Cifras que cuentan (también las de TikTok)
+    $$("[data-count], [data-num]").forEach((el) => {
+      const target = +(el.dataset.count ?? el.dataset.num), suf = el.dataset.suffix || "", o = { v: 0 };
+      const fmt = el.dataset.num ? (v) => num(Math.round(v)) : (v) => Math.round(v) + suf;
+      el.textContent = fmt(0);
+      ST.create({ trigger: el, start: "top 88%", once: true, onEnter: () => G.to(o, { v: target, duration: 2, ease: "power3.out", onUpdate: () => (el.textContent = fmt(o.v)) }) });
     });
 
-    // 5. Banner y foto de bio con parallax
+    // 5. Parallax suave en banner y foto de "Sobre mí"
     if (!$("#banner").hidden) G.fromTo("#bannerImg img", { yPercent: -8 }, { yPercent: 8, ease: "none", scrollTrigger: { trigger: "#banner", scrub: true } });
-    if ($("#bioPhoto img")) G.fromTo("#bioPhoto img", { yPercent: 8 }, { yPercent: -4, ease: "none", scrollTrigger: { trigger: "#bioPhoto", scrub: true } });
+    if ($("#aboutPhoto img")) G.fromTo("#aboutPhoto img", { yPercent: 8 }, { yPercent: -4, ease: "none", scrollTrigger: { trigger: "#aboutPhoto", scrub: true } });
 
-    // 6. Galería horizontal (escritorio)
-    const mm = G.matchMedia();
-    mm.add("(min-width: 901px)", () => {
-      const track = $("#track"), sec = $("#photos");
-      if (!track || sec.hidden) return;
-      const dist = () => Math.max(0, track.scrollWidth - innerWidth);
-      const move = G.to(track, { x: () => -dist(), ease: "none",
-        scrollTrigger: { trigger: sec, start: "top top", end: () => "+=" + dist(), pin: true, scrub: 0.8, invalidateOnRefresh: true } });
-      $$(".panel-frame img", track).forEach((img) => G.fromTo(img, { xPercent: -6 }, { xPercent: 6, ease: "none",
-        scrollTrigger: { trigger: img.closest(".panel"), containerAnimation: move, start: "left right", end: "right left", scrub: true } }));
-    });
+    // 7. Rótulos de neón: se encienden con el parpadeo del arranque
+    $$(".sign-plate").forEach((plate, i) => ST.create({ trigger: plate, start: "top 80%", once: true, onEnter: () => {
+      const seq = [0, 0.06, 0.12, 0.2, 0.34, 0.42, 0.6];
+      seq.forEach((t, j) => G.delayedCall(t + i * 0.18, () => plate.classList.toggle("on", j % 2 === 0)));
+      G.delayedCall(0.75 + i * 0.18, () => plate.classList.add("on"));
+    } }));
 
-    // 7. Salas: el nombre se rellena de hielo al bajar
-    $$(".venue").forEach((v) => G.fromTo(v, { backgroundPosition: "100% 0" }, { backgroundPosition: "0% 0", ease: "none",
-      scrollTrigger: { trigger: v, start: "top 88%", end: "top 48%", scrub: true } }));
-
-    // 8. Rótulo de neón y logo final
+    // 8. Rótulo de booking y logo final
     ST.create({ trigger: "#neonSign", start: "top 85%", once: true, onEnter: () => $("#neonSign").classList.add("lit") });
     if ($("#footerLogo img")) G.fromTo("#footerLogo img", { yPercent: 35, opacity: 0 }, { yPercent: 0, opacity: 0.92, ease: "none",
       scrollTrigger: { trigger: ".footer", start: "top bottom", end: "bottom bottom", scrub: true } });
 
-    // Recalcular cuando cargan imágenes y fuentes
     addEventListener("load", () => ST.refresh());
     document.fonts?.ready.then(() => ST.refresh());
     if (document.readyState === "complete") requestAnimationFrame(() => ST.refresh());
   }
 
-  // Enlaces internos con scroll suave
   function setupLinks() {
     const nav = $("#nav"), toggle = $("#navToggle");
     toggle.addEventListener("click", () => { const o = nav.classList.toggle("open"); toggle.setAttribute("aria-expanded", o); o ? lenis?.stop() : lenis?.start(); });
@@ -452,9 +615,8 @@
     });
   }
 
-  /* ===================== PUNTERO: luz del hielo, cursor, parallax, efecto líquido ===================== */
+  /* ===================== PUNTERO ===================== */
   function setupPointer() {
-    const hero = $("#hero");
     addEventListener("pointermove", (e) => {
       if (!ice) return;
       const r = $("#iceCanvas")?.getBoundingClientRect();
@@ -466,15 +628,16 @@
     root.classList.add("has-cursor");
     const cur = $("#cursor"), label = $("#cursorLabel");
     const qx = G.quickTo(cur, "x", { duration: 0.35, ease: "power3" }), qy = G.quickTo(cur, "y", { duration: 0.35, ease: "power3" });
-    const px = G.quickTo("#heroPerson img", "x", { duration: 1, ease: "power3" }), py = G.quickTo("#heroPerson img", "y", { duration: 1, ease: "power3" });
+    const px = G.quickTo("#personStack", "x", { duration: 1, ease: "power3" }), py = G.quickTo("#personStack", "y", { duration: 1, ease: "power3" });
+    const vx = G.quickTo("#heroVideo", "x", { duration: 1.6, ease: "power3" });
     addEventListener("pointermove", (e) => {
       qx(e.clientX); qy(e.clientY);
       const dx = e.clientX / innerWidth - 0.5, dy = e.clientY / innerHeight - 0.5;
-      px(dx * -18); py(dy * -10);
+      px(dx * -18); py(dy * -10); vx(dx * 24);
     }, { passive: true });
     document.addEventListener("pointerover", (e) => {
       const lab = e.target.closest("[data-cursor]");
-      const text = lab && lab.dataset.cursor;
+      const text = lab && !lab.classList.contains("playing") && lab.dataset.cursor;
       cur.classList.toggle("has-label", !!text);
       label.textContent = text || "";
       cur.classList.toggle("is-link", !text && !!e.target.closest("a, button, input, textarea, label"));
@@ -546,10 +709,10 @@
 
   /* ===================== ARRANQUE ===================== */
   async function init() {
-    const yieldTask = () => new Promise((r) => setTimeout(r, 0)); // trocea el arranque en tareas cortas
     await render();
     await yieldTask();
     setupIce();
+    setupVideo();
     await yieldTask();
     setupScroll();
     setupLinks();
@@ -558,6 +721,8 @@
     setupLightbox();
     startLoop();
     playIntro(revealHero);
+    await yieldTask();
+    await buildPerson(); // etalonado + contraluz (después de arrancar, troceado para no frenar la carga)
   }
   init().catch((e) => { console.error(e); $("#intro")?.remove(); document.body.classList.remove("is-loading"); });
 })();

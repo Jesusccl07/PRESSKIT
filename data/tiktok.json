@@ -1,0 +1,49 @@
+{
+  "profile": {
+    "handle": "djclement07",
+    "nickname": "DJ Clement",
+    "followers": 577,
+    "likes": 6082,
+    "videos": 71
+  },
+  "totals": {
+    "views": 177167,
+    "counted": 71
+  },
+  "latest": [
+    {
+      "id": "7703533638306123030",
+      "url": "https://www.tiktok.com/@djclement07/video/7703533638306123030",
+      "description": "HALLOWEEN AFTERMOVIE 🎃🩸 Una noche de terror que no se va a repetir… o sí 👀 Gracias a todos los que vinisteis disfrazados y lo disteis todo en la pista 🖤 Nos vemos en la próxima. 🎧 @jesusccl_ x @byjossemora 📍 @la_club_cr #halloween #aftermovie #halloweenparty #parati #viral",
+      "views": 577,
+      "likes": 31,
+      "comments": 1,
+      "duration": 31,
+      "timestamp": 1793618710,
+      "cover": "data/tiktok/7703533638306123030.jpg"
+    },
+    {
+      "id": "7702222094645382422",
+      "url": "https://www.tiktok.com/@djclement07/video/7702222094645382422",
+      "description": "La noche mágica  #djclement #pov #parati #Music",
+      "views": 1592,
+      "likes": 62,
+      "comments": 1,
+      "duration": 42,
+      "timestamp": 1793313335,
+      "cover": "data/tiktok/7702222094645382422.jpg"
+    },
+    {
+      "id": "7701316414052896022",
+      "url": "https://www.tiktok.com/@djclement07/video/7701316414052896022",
+      "description": "Sábado 24🔥 Así sonó la cabina. ¿Repetimos?🎧 #aftermovie #djclement #dj #fiesta #nightlife",
+      "views": 971,
+      "likes": 47,
+      "comments": 3,
+      "duration": 44,
+      "timestamp": 1793102468,
+      "cover": "data/tiktok/7701316414052896022.jpg"
+    }
+  ],
+  "updated": "2026-11-04T10:13:46+00:00"
+}
