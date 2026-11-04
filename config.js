@@ -83,9 +83,13 @@ window.PRESSKIT = {
     { src: "assets/photos/clement-silla.webp" },
   ],
 
-  // Redes. Los 3 últimos TikToks y las cifras se actualizan solos (GitHub Actions, cada 3 horas)
+  // Redes. Los 3 últimos TikToks y las cifras se actualizan solos (GitHub Actions, cada 3 horas).
+  // Los seguidores suman TikTok + Instagram automáticamente. Instagram no deja leer los me gusta ni
+  // las visualizaciones sin iniciar sesión: si quieres sumarlos, pon aquí tus totales de Instagram.
   social: {
     tiktokData: "data/tiktok.json",
+    instagramLikes: 0,
+    instagramViews: 0,
   },
 
   // Música: URLs de embed (SoundCloud / Spotify / YouTube / Mixcloud)
@@ -100,45 +104,33 @@ window.PRESSKIT = {
     { venue: "Euphoria" },
   ],
 
-  // Rider técnico
+  // Rider técnico (sencillo: lo justo para que la sala sepa qué necesito)
   rider: {
     groups: [
       {
         icon: "deck",
-        title: { es: "Con lo que suelo pinchar", en: "What I usually play on" },
+        title: { es: "Equipo", en: "Gear" },
         items: [
-          { es: "Denon DJ Prime 4+", en: "Denon DJ Prime 4+" },
-          { es: "O una cabina Pioneer estándar: 2 CDJ-3000 / CDJ-2000NXS2 y mixer DJM-900NXS2 / DJM-A9", en: "Or a standard Pioneer booth: 2 CDJ-3000 / CDJ-2000NXS2 and a DJM-900NXS2 / DJM-A9 mixer" },
-        ],
-      },
-      {
-        icon: "swap",
-        title: { es: "Me adapto a cualquier equipo", en: "I adapt to any setup" },
-        items: [
-          { es: "Pioneer, Denon DJ, Rane o controladora: pincho con el equipo que tenga la sala.", en: "Pioneer, Denon DJ, Rane or a controller: I play on whatever the venue has." },
+          { es: "Normalmente pincho con equipos Denon DJ, pero me adapto a cualquier sistema Pioneer.", en: "I usually play on Denon DJ gear, but I adapt to any Pioneer setup." },
         ],
       },
       {
         icon: "monitor",
         required: true,
-        title: { es: "Imprescindible: monitores de cabina", en: "Required: booth monitors" },
+        title: { es: "Monitores de cabina", en: "Booth monitors" },
         items: [
-          { es: "2 monitores potentes en cabina, a la altura del DJ y con volumen propio. Sin monitores no se puede pinchar.", en: "2 powerful booth monitors at DJ height with their own volume. Without monitors I can't play." },
+          { es: "Necesito monitores en cabina para poder pinchar.", en: "I need booth monitors to be able to play." },
         ],
       },
       {
         icon: "case",
-        title: { es: "Si llevo mi propio equipo", en: "If I bring my own gear" },
+        title: { es: "Si hace falta, llevo mi equipo", en: "I can bring my own gear" },
         items: [
-          { es: "Llevo mi Denon DJ Prime 4+.", en: "I bring my Denon DJ Prime 4+." },
-          { es: "Solo necesito una mesa estable de 1,5 m, una toma de corriente y conexión a la mesa de sonido (2 XLR o RCA).", en: "I just need a stable 1.5 m table, a power outlet and a connection to the sound system (2 XLR or RCA)." },
+          { es: "Si la sala no tiene equipo, puedo llevar el mío.", en: "If the venue has no gear, I can bring mine." },
         ],
       },
     ],
-    extras: [
-      { es: "Micrófono inalámbrico conectado al mixer", en: "Wireless mic into the mixer" },
-      { es: "Agua y toalla en cabina", en: "Water and a towel in the booth" },
-    ],
+    extras: [],
   },
 
   contact: {

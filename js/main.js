@@ -33,14 +33,15 @@
   const tr = (v) => (v && typeof v === "object" && !Array.isArray(v) ? v[lang] ?? v.es : v);
   const I18N = {
     es: {
-      "nav.about": "Sobre mí", "nav.photos": "Fotos", "nav.social": "TikTok", "nav.music": "Música", "nav.venues": "Salas", "nav.rider": "Rider", "nav.booking": "Booking",
+      "nav.about": "Sobre mí", "nav.photos": "Fotos", "nav.social": "Redes", "nav.music": "Música", "nav.venues": "Salas", "nav.rider": "Rider", "nav.booking": "Booking",
       "hero.book": "Contratar", "hero.photos": "Ver fotos", "hero.listen": "Escuchar",
       "about.title": "Sobre mí",
       "photos.title": "Fotos de prensa", "photos.sub": "Sin fondo, listas para carteles y flyers. Toca una foto para ampliarla.",
       "photos.download": "Descargar", "photos.dlTitle": "Material para promotores",
       "photos.dlText": "Logos y fotos en alta calidad con fondo transparente, y la ficha en PDF.",
-      "social.title": "Lo último en TikTok", "social.sub": "Mis tres últimos vídeos. Se actualiza solo cada vez que subo uno nuevo.",
-      "social.followers": "seguidores", "social.likes": "me gusta", "social.views": "visualizaciones",
+      "social.title": "En redes", "social.sub": "Mis tres últimos vídeos de TikTok. Se actualizan solos cada vez que subo uno nuevo.",
+      "social.followers": "seguidores", "social.followersBoth": "seguidores en TikTok e Instagram", "social.likes": "me gusta", "social.views": "visualizaciones",
+      "social.noteTT": "Me gusta y visualizaciones de TikTok.", "social.noteBoth": "Sumando TikTok e Instagram.",
       "social.follow": "Seguir en TikTok", "social.ig": "Instagram", "social.open": "Abrir en TikTok", "social.play": "Reproducir vídeo",
       "social.updated": "Actualizado", "social.sound": "sonido original",
       "music.title": "Música", "venues.title": "Ha pinchado en", "venues.resident": "Residente", "rider.title": "Rider técnico",
@@ -56,14 +57,15 @@
       "sound.play": "Play", "sound.pause": "Pausa", "cursor.view": "Ver", "cursor.play": "Play", "lang.label": "View in English", "ui.swipe": "Desliza",
     },
     en: {
-      "nav.about": "About", "nav.photos": "Photos", "nav.social": "TikTok", "nav.music": "Music", "nav.venues": "Venues", "nav.rider": "Rider", "nav.booking": "Booking",
+      "nav.about": "About", "nav.photos": "Photos", "nav.social": "Social", "nav.music": "Music", "nav.venues": "Venues", "nav.rider": "Rider", "nav.booking": "Booking",
       "hero.book": "Book CLEMENT", "hero.photos": "See photos", "hero.listen": "Listen",
       "about.title": "About me",
       "photos.title": "Press photos", "photos.sub": "Background-free, ready for posters and flyers. Tap a photo to view it.",
       "photos.download": "Download", "photos.dlTitle": "Promoter assets",
       "photos.dlText": "High-res logos and photos with transparent backgrounds, plus the PDF one-sheet.",
-      "social.title": "Latest on TikTok", "social.sub": "My three latest videos. Updates by itself every time I post a new one.",
-      "social.followers": "followers", "social.likes": "likes", "social.views": "views",
+      "social.title": "On social", "social.sub": "My three latest TikTok videos. They update by themselves every time I post a new one.",
+      "social.followers": "followers", "social.followersBoth": "followers on TikTok and Instagram", "social.likes": "likes", "social.views": "views",
+      "social.noteTT": "Likes and views from TikTok.", "social.noteBoth": "TikTok and Instagram combined.",
       "social.follow": "Follow on TikTok", "social.ig": "Instagram", "social.open": "Open in TikTok", "social.play": "Play video",
       "social.updated": "Updated", "social.sound": "original sound",
       "music.title": "Music", "venues.title": "Has played at", "venues.resident": "Resident", "rider.title": "Technical rider",
@@ -81,7 +83,10 @@
   };
   const T = (k) => I18N[lang][k] ?? I18N.es[k] ?? k;
   if (lang === "en") $('meta[name="description"]').content = "Official press kit of CLEMENT, resident DJ at La Club and Sala Systema (Ciudad Real, Spain). Reggaeton, dembow and trap. 6+ years, 200+ sets. Photos, logos, technical rider and booking.";
-  const num = (n) => new Intl.NumberFormat(lang === "es" ? "es-ES" : "en-GB", { notation: n >= 1000 ? "compact" : "standard", maximumFractionDigits: 1 }).format(n);
+  // < 10.000: número exacto con su punto (3.002); a partir de ahí, compacto (177,2 mil)
+  const num = (n) => n < 10000
+    ? String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, lang === "es" ? "." : ",")
+    : new Intl.NumberFormat(lang === "es" ? "es-ES" : "en-GB", { notation: "compact", maximumFractionDigits: 1 }).format(n);
 
   const probe = (src) => new Promise((res) => {
     if (!src) return res(null);
@@ -198,7 +203,7 @@
       `<a class="btn ${l.primary ? "btn-primary" : "btn-ghost"}" href="${l.src}" download>${esc(tr(l.label))}</a>`).join("");
     const panels = photos.map((p, i) => `
       <figure class="panel${p.wide ? " wide" : ""}" data-i="${i}" data-cursor="${T("cursor.view")}">
-        <div class="panel-frame"><div class="panel-clip liquid"><img src="${p.src}" alt="${name}, foto ${i + 1}" loading="lazy" decoding="async" draggable="false"></div></div>
+        <div class="panel-frame"><div class="panel-clip"><img src="${p.src}" alt="${name}, foto ${i + 1}" loading="lazy" decoding="async" draggable="false"></div></div>
         <figcaption><span>${i + 1}/${photos.length}</span><a href="${p.src}" download>${T("photos.download")}</a></figcaption>
       </figure>`).join("");
     const dlPanel = dls ? `<div class="panel panel-dl">${logo ? `<img src="${C.logo.main}" alt="">` : ""}<h3>${T("photos.dlTitle")}</h3><p>${T("photos.dlText")}</p><div class="dl-list">${dls}</div></div>` : "";
@@ -277,10 +282,17 @@
       if (r.ok) data = await r.json();
     } catch (e) { /* sin datos: se usa el widget oficial */ }
 
-    const p = data?.profile || {};
-    const stats = [[p.followers, T("social.followers")], [p.likes, T("social.likes")], [data?.totals?.views, T("social.views")]].filter(([v]) => +v > 0);
-    if (stats.length) $("#socialStats").innerHTML = stats.map(([v, l]) => `<div><dt>${esc(l)}</dt><dd data-num="${+v}">${num(+v)}</dd></div>`).join("");
-    else $("#socialStats").remove();
+    // Cifras unificadas: TikTok (automático) + Instagram (seguidores automáticos; me gusta y
+    // visualizaciones solo si se ponen en config.social, porque Instagram no los enseña sin iniciar sesión)
+    const p = data?.profile || {}, igD = data?.instagram || {};
+    const igFollowers = +igD.followers || 0, igLikes = +C.social?.instagramLikes || 0, igViews = +C.social?.instagramViews || 0;
+    const followers = (+p.followers || 0) + igFollowers;
+    const likes = (+p.likes || 0) + igLikes, views = (+data?.totals?.views || 0) + igViews;
+    const stats = [[followers, T(igFollowers ? "social.followersBoth" : "social.followers")], [likes, T("social.likes")], [views, T("social.views")]].filter(([v]) => v > 0);
+    if (stats.length) {
+      $("#socialStats").innerHTML = stats.map(([v, l]) => `<div><dt>${esc(l)}</dt><dd data-num="${v}">${num(v)}</dd></div>`).join("");
+      if (igFollowers) $("#socialStats").insertAdjacentHTML("afterend", `<p class="social-note">${T(igLikes || igViews ? "social.noteBoth" : "social.noteTT")}</p>`);
+    } else $("#socialStats").remove();
     $("#socialActions").innerHTML =
       `<a class="btn btn-primary" href="https://www.tiktok.com/@${esc(handle)}" target="_blank" rel="noopener">${svg("tiktok")}${T("social.follow")}</a>` +
       (isPh(ig) ? "" : `<a class="btn btn-ghost" href="https://www.instagram.com/${esc(ig)}/" target="_blank" rel="noopener">${svg("instagram")}@${esc(ig)}</a>`);
@@ -626,21 +638,6 @@
       cur.classList.toggle("has-label", !!text);
       label.textContent = text || "";
       cur.classList.toggle("is-link", !text && !!e.target.closest("a, button, input, textarea, label"));
-    });
-
-    // Efecto líquido al pasar por las fotos
-    const map = $("#liquidMap"), noise = $("#liquidNoise");
-    let wobble = null;
-    $$(".liquid").forEach((el) => {
-      el.addEventListener("pointerenter", () => {
-        el.classList.add("is-liquid");
-        G.to(map, { attr: { scale: 34 }, duration: 0.7, ease: "power2.out", overwrite: true });
-        wobble = G.to(noise, { attr: { baseFrequency: "0.011 0.02" }, duration: 1.4, ease: "sine.inOut", yoyo: true, repeat: -1 });
-      });
-      el.addEventListener("pointerleave", () => {
-        wobble?.kill();
-        G.to(map, { attr: { scale: 0 }, duration: 0.6, ease: "power2.out", overwrite: true, onComplete: () => el.classList.remove("is-liquid") });
-      });
     });
   }
 

@@ -1,6 +1,6 @@
-name: Actualizar TikTok
+name: Actualizar redes (TikTok e Instagram)
 
-# Cada 3 horas mira si hay vídeos nuevos en TikTok y actualiza la web.
+# Cada 3 horas mira si hay vídeos nuevos en TikTok, refresca las cifras de TikTok e Instagram y actualiza la web.
 # También se puede lanzar a mano: pestaña Actions -> "Actualizar TikTok" -> Run workflow.
 on:
   schedule:

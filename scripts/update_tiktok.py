@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Actualiza data/tiktok.json con los últimos vídeos y las estadísticas de TikTok.
+"""Actualiza data/tiktok.json con los últimos vídeos de TikTok y las cifras de TikTok e Instagram.
 
 Lo ejecuta GitHub Actions cada pocas horas (.github/workflows/tiktok.yml).
 Usa varias fuentes públicas, sin claves ni API, y si una falla prueba la siguiente:
@@ -7,6 +7,7 @@ Usa varias fuentes públicas, sin claves ni API, y si una falla prueba la siguie
      ofrece para incrustar en webs: trae los últimos vídeos, portadas y visualizaciones.
   2. yt-dlp: añade me gusta, comentarios y el total de visualizaciones.
   3. La página pública del perfil: seguidores y me gusta.
+  4. Instagram: los seguidores que muestra el perfil público (como lo ve cualquier visitante).
 Si todo falla, no toca nada y la web sigue mostrando lo último que se guardó.
 Para no llenar el historial de commits, si no hay vídeos nuevos solo refresca
 las cifras una vez al día.
@@ -22,6 +23,7 @@ import urllib.request
 from pathlib import Path
 
 HANDLE = os.environ.get("TIKTOK_HANDLE", "djclement07")
+IG_HANDLE = os.environ.get("INSTAGRAM_HANDLE", "jesusccl_")
 LATEST = 3
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"
@@ -40,20 +42,64 @@ def log(*a):
     print(*a, file=sys.stderr)
 
 
-def http_get(url, timeout=30):
+NAV_HEADERS = {  # cabeceras de una navegación normal (el User-Agent lo pone curl_cffi, a juego con su huella)
+    "Accept": HEADERS["Accept"],
+    "Accept-Language": HEADERS["Accept-Language"],
+    "Upgrade-Insecure-Requests": "1",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-User": "?1",
+}
+
+
+def http_get(url, timeout=30, headers=None, redirects=True):
     """GET imitando a un navegador. Usa curl_cffi (huella TLS de Chrome) si está instalado."""
+    h = headers or HEADERS
     try:
         from curl_cffi import requests as creq
-        r = creq.get(url, headers=HEADERS, impersonate="chrome", timeout=timeout)
+        # con curl_cffi el User-Agent lo pone él, a juego con su huella de Chrome (si no, parece un bot)
+        ch = {k: v for k, v in h.items() if k.lower() != "user-agent"}
+        r = creq.get(url, headers=ch, impersonate="chrome", timeout=timeout, allow_redirects=redirects)
         r.raise_for_status()
+        if not redirects and 300 <= r.status_code < 400:
+            raise ValueError(f"redirige a {r.headers.get('location')}")
         return r.content
     except ImportError:
         pass
     except Exception as e:  # noqa: BLE001
+        if not redirects:
+            raise
         log("curl_cffi falló, pruebo urllib:", e)
-    req = urllib.request.Request(url, headers=HEADERS)
+    req = urllib.request.Request(url, headers={"User-Agent": UA, **h})
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return r.read()
+
+
+def parse_count(num, suffix=""):
+    """'2,425' / '2.425' / '12,5' + 'mil' / '1.2' + 'K' -> entero."""
+    suffix = (suffix or "").lower()
+    if suffix in ("mil", "k", "m", "mill."):
+        val = float(num.replace(",", "."))
+        return int(round(val * (1_000_000 if suffix in ("m", "mill.") else 1000)))
+    return int(re.sub(r"[.,\s]", "", num))
+
+
+def from_instagram():
+    """Fuente 4: seguidores y nº de publicaciones del perfil público de Instagram."""
+    html = http_get(f"https://www.instagram.com/{IG_HANDLE}/", headers=NAV_HEADERS, redirects=False).decode("utf-8", "ignore")
+    m = (re.search(r'property="og:description" content="([^"]+)"', html)
+         or re.search(r'content="([^"]+)" property="og:description"', html))
+    if not m:
+        raise ValueError("el perfil no trae el resumen")
+    desc = m.group(1).replace("&nbsp;", " ")
+    f = re.search(r"([\d.,]+)\s*(mil|k|m|mill\.)?\s*(seguidores|followers)", desc, re.I)
+    po = re.search(r"([\d.,]+)\s*(mil|k)?\s*(publicaciones|posts)", desc, re.I)
+    if not f:
+        raise ValueError(f"no entiendo el resumen: {desc[:80]}")
+    return {"handle": IG_HANDLE, "followers": parse_count(f.group(1), f.group(2)),
+            "posts": parse_count(po.group(1), po.group(2)) if po else None,
+            "checked": datetime.date.today().isoformat()}
 
 
 def find_key(obj, key):
@@ -192,6 +238,7 @@ def main():
     embed = attempt("Widget oficial", from_embed)
     ytdlp = attempt("yt-dlp", from_ytdlp)
     page_profile = attempt("Página del perfil", from_profile_page)
+    instagram = attempt("Instagram", from_instagram)
 
     embed_entries, embed_profile = embed if embed else ([], {})
     by_id = {e["id"]: dict(e) for e in embed_entries}
@@ -234,7 +281,8 @@ def main():
     else:  # sin yt-dlp no hay total fiable: se conserva el último (nunca baja)
         totals = prev.get("totals") or {"views": sum(e.get("views") or 0 for e in embed_entries), "counted": len(embed_entries)}
 
-    data = {"profile": profile, "totals": totals, "latest": latest}
+    data = {"profile": profile, "totals": totals, "latest": latest,
+            "instagram": instagram or prev.get("instagram") or {"handle": IG_HANDLE}}
     same_videos = [v["id"] for v in latest] == [v["id"] for v in prev.get("latest", [])]
     if same_videos and prev.get("updated"):
         age = time.time() - datetime.datetime.fromisoformat(prev["updated"]).timestamp()
@@ -246,7 +294,7 @@ def main():
     DATA.mkdir(exist_ok=True)
     OUT.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     log("Actualizado:", [v["id"] for v in latest], "| fuentes:",
-        ", ".join(n for n, ok in (("widget", embed), ("yt-dlp", ytdlp), ("perfil", page_profile)) if ok))
+        ", ".join(n for n, ok in (("widget", embed), ("yt-dlp", ytdlp), ("perfil", page_profile), ("instagram", instagram)) if ok))
     return 0
 
 

@@ -7,7 +7,7 @@
     "videos": 71
   },
   "totals": {
-    "views": 177171,
+    "views": 177173,
     "counted": 71
   },
   "latest": [
@@ -15,11 +15,11 @@
       "id": "7703533638306123030",
       "url": "https://www.tiktok.com/@djclement07/video/7703533638306123030",
       "description": "HALLOWEEN AFTERMOVIE 🎃🩸 Una noche de terror que no se va a repetir… o sí 👀 Gracias a todos los que vinisteis disfrazados y lo disteis todo en la pista 🖤 Nos vemos en la próxima. 🎧 @jesusccl_ x @byjossemora 📍 @la_club_cr #halloween #aftermovie #halloweenparty #parati #viral",
-      "views": 579,
+      "views": 581,
       "likes": 31,
       "comments": 1,
       "duration": 31,
-      "timestamp": 1793618695,
+      "timestamp": 1793618710,
       "cover": "data/tiktok/7703533638306123030.jpg"
     },
     {
@@ -30,7 +30,7 @@
       "likes": 62,
       "comments": 1,
       "duration": 42,
-      "timestamp": 1793313327,
+      "timestamp": 1793313335,
       "cover": "data/tiktok/7702222094645382422.jpg"
     },
     {
@@ -41,9 +41,15 @@
       "likes": 47,
       "comments": 3,
       "duration": 44,
-      "timestamp": 1793102457,
+      "timestamp": 1793102468,
       "cover": "data/tiktok/7701316414052896022.jpg"
     }
   ],
-  "updated": "2026-11-04T10:39:52+00:00"
+  "instagram": {
+    "handle": "jesusccl_",
+    "followers": 2425,
+    "posts": 15,
+    "checked": "2026-11-04"
+  },
+  "updated": "2026-11-04T11:37:04+00:00"
 }
