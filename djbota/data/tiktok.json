@@ -1,10 +1,10 @@
 {
   "profile": {
     "handle": "d.j.bota",
-    "followers": 1724,
-    "likes": 4257,
+    "followers": 1731,
+    "likes": 4313,
     "nickname": "DJ Bota",
-    "videos": 157
+    "videos": 159
   },
   "totals": {
     "views": 100736,
@@ -12,41 +12,41 @@
   },
   "latest": [
     {
+      "id": "7706175238081482016",
+      "url": "https://www.tiktok.com/@d.j.bota/video/7706175238081482016",
+      "description": "💍🔥 MARÍA & SERGIO | ¡MENUDO BODÓN! 🎧 Un día inolvidable, una pareja increíble y una fiesta que no olvidaremos. ❤️🥂 Tuvimos el placer de poner ritmo a la boda de María y Sergio… ¡y vaya manera de celebrarlo! 🕺💃🔥 🎧 TWO GENERATIONS ⚡ DJ BOTA & DJ CLEMENT @DJ Clement  Dos generaciones, una misma pasión. 🎶❤️ Gracias por confiar en nosotros para hacer de vuestro gran día una auténtica FIESTA. 🔥 🎥 ¡Dale al play y disfruta de algunos de los mejores momentos! #boda  #fyp  #viral  #DJBodas #Bodas2026",
+      "views": 49000,
+      "likes": null,
+      "comments": null,
+      "duration": null,
+      "timestamp": 1794233740,
+      "cover": "data/tiktok/7706175238081482016.jpg"
+    },
+    {
+      "id": "7704446554035342624",
+      "url": "https://www.tiktok.com/@d.j.bota/video/7704446554035342624",
+      "description": "#trendiing #ciudadreal #dj #eventos #fiestas",
+      "views": 345,
+      "likes": null,
+      "comments": null,
+      "duration": null,
+      "timestamp": 1793831250,
+      "cover": "data/tiktok/7704446554035342624.jpg"
+    },
+    {
       "id": "7703323595711253792",
       "url": "https://www.tiktok.com/@d.j.bota/video/7703323595711253792",
       "description": "#fiestas #eventos #dj #ciudadreal #trendiing",
-      "views": 307,
+      "views": 348,
       "likes": 5,
       "comments": 0,
       "duration": 119,
-      "timestamp": 1793569798,
+      "timestamp": 1793569791,
       "cover": "data/tiktok/7703323595711253792.jpg"
-    },
-    {
-      "id": "7699509789650357537",
-      "url": "https://www.tiktok.com/@d.j.bota/video/7699509789650357537",
-      "description": "#ciudadreal #dj #eventos #fiestas #trendiing  Un pequeño resumen de algunas  fiestas y eventos que hemos recorrido este verano..... DJ BOTA",
-      "views": 371,
-      "likes": 9,
-      "comments": 1,
-      "duration": 60,
-      "timestamp": 1792681824,
-      "cover": "data/tiktok/7699509789650357537.jpg"
-    },
-    {
-      "id": "7698069268096879894",
-      "url": "https://www.tiktok.com/@d.j.bota/video/7698069268096879894",
-      "description": "#trendiing #fiestas #eventos #dj #ciudadreal @krysa_cris Gran fiesta de 50 Cumpleaños, lo pasamos genialllll!!!!🎧🎊🎧🎊💯",
-      "views": 525,
-      "likes": 19,
-      "comments": 0,
-      "duration": 96,
-      "timestamp": 1792346428,
-      "cover": "data/tiktok/7698069268096879894.jpg"
     }
   ],
   "instagram": {
     "handle": "d.j.bota"
   },
-  "updated": "2026-11-04T19:19:48+00:00"
+  "updated": "2026-11-10T23:24:05+00:00"
 }
