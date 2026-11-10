@@ -1,0 +1,16 @@
+{
+  "name": "DJ BOTA · Press Kit",
+  "short_name": "DJ BOTA",
+  "description": "Press kit oficial de DJ BOTA: más de 30 años como DJ en bodas, cumpleaños, graduaciones y fiestas privadas.",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#080605",
+  "theme_color": "#080605",
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "assets/icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

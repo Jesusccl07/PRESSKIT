@@ -27,7 +27,9 @@ HANDLE = os.environ.get("TIKTOK_HANDLE", "djclement07")
 IG_HANDLE = os.environ.get("INSTAGRAM_HANDLE", "jesusccl_")
 LATEST = 3
 ROOT = Path(__file__).resolve().parent.parent
-DATA = ROOT / "data"
+# Carpeta de la web (vacía = la principal; p. ej. "djbota" para la de DJ Bota)
+SITE = ROOT / os.environ.get("SITE_DIR", "")
+DATA = SITE / "data"
 COVERS = DATA / "tiktok"
 OUT = DATA / "tiktok.json"
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -283,7 +285,7 @@ def main():
     latest = []
     for e in entries[:LATEST]:
         old = prev_latest.get(e["id"], {})
-        cover = old.get("cover") if old.get("cover") and (ROOT / old["cover"]).exists() else None
+        cover = old.get("cover") if old.get("cover") and (SITE / old["cover"]).exists() else None
         if not cover:
             cover = attempt(f"Portada {e['id']}", lambda: save_cover(e["id"], e.get("cover_url")))
         latest.append({
@@ -324,7 +326,7 @@ def main():
             return 0
 
     data["updated"] = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat()
-    DATA.mkdir(exist_ok=True)
+    DATA.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     log("Actualizado:", [v["id"] for v in latest], "| fuentes:",
         ", ".join(n for n, ok in (("widget", embed), ("yt-dlp", ytdlp), ("perfil", page_profile), ("instagram", instagram)) if ok))

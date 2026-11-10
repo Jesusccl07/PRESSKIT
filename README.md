@@ -70,3 +70,10 @@ Archivos:
 - `js/main.js`: contenido y animaciones
 - `js/ice.js`: logo 3D
 - `js/sound.js`: audio
+
+## Otros press kits en este repositorio
+`djbota/` es el press kit de DJ BOTA (vinilo, naranja/gris/negro), publicado en
+**https://jesusccl07.github.io/PRESSKIT/djbota/**. Es una web independiente con su propio
+`config.js`, `styles.css` y `js/main.js`; comparte solo el motor de sonido (`js/sound.js`) y
+`scripts/update_tiktok.py` (con `SITE_DIR=djbota` en `.github/workflows/tiktok.yml`), que
+actualiza sus propios `djbota/data/tiktok.json` y portadas cada 3 horas.

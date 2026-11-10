@@ -6,4 +6,10 @@
     <xhtml:link rel="alternate" hreflang="en" href="https://jesusccl07.github.io/PRESSKIT/?lang=en"/>
     <changefreq>weekly</changefreq>
   </url>
+  <url>
+    <loc>https://jesusccl07.github.io/PRESSKIT/djbota/</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://jesusccl07.github.io/PRESSKIT/djbota/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://jesusccl07.github.io/PRESSKIT/djbota/?lang=en"/>
+    <changefreq>weekly</changefreq>
+  </url>
 </urlset>

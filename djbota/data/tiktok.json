@@ -1,0 +1,52 @@
+{
+  "profile": {
+    "handle": "d.j.bota",
+    "followers": 1724,
+    "likes": 4257,
+    "nickname": "DJ Bota",
+    "videos": 157
+  },
+  "totals": {
+    "views": 100736,
+    "counted": 100
+  },
+  "latest": [
+    {
+      "id": "7703323595711253792",
+      "url": "https://www.tiktok.com/@d.j.bota/video/7703323595711253792",
+      "description": "#fiestas #eventos #dj #ciudadreal #trendiing",
+      "views": 307,
+      "likes": 5,
+      "comments": 0,
+      "duration": 119,
+      "timestamp": 1793569798,
+      "cover": "data/tiktok/7703323595711253792.jpg"
+    },
+    {
+      "id": "7699509789650357537",
+      "url": "https://www.tiktok.com/@d.j.bota/video/7699509789650357537",
+      "description": "#ciudadreal #dj #eventos #fiestas #trendiing  Un pequeño resumen de algunas  fiestas y eventos que hemos recorrido este verano..... DJ BOTA",
+      "views": 371,
+      "likes": 9,
+      "comments": 1,
+      "duration": 60,
+      "timestamp": 1792681824,
+      "cover": "data/tiktok/7699509789650357537.jpg"
+    },
+    {
+      "id": "7698069268096879894",
+      "url": "https://www.tiktok.com/@d.j.bota/video/7698069268096879894",
+      "description": "#trendiing #fiestas #eventos #dj #ciudadreal @krysa_cris Gran fiesta de 50 Cumpleaños, lo pasamos genialllll!!!!🎧🎊🎧🎊💯",
+      "views": 525,
+      "likes": 19,
+      "comments": 0,
+      "duration": 96,
+      "timestamp": 1792346428,
+      "cover": "data/tiktok/7698069268096879894.jpg"
+    }
+  ],
+  "instagram": {
+    "handle": "d.j.bota"
+  },
+  "updated": "2026-11-04T19:19:48+00:00"
+}
