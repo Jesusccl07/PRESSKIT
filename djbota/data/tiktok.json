@@ -2,12 +2,12 @@
   "profile": {
     "handle": "d.j.bota",
     "followers": 1731,
-    "likes": 4313,
+    "likes": 4315,
     "nickname": "DJ Bota",
     "videos": 159
   },
   "totals": {
-    "views": 100736,
+    "views": 149196,
     "counted": 100
   },
   "latest": [
@@ -16,37 +16,37 @@
       "url": "https://www.tiktok.com/@d.j.bota/video/7706175238081482016",
       "description": "💍🔥 MARÍA & SERGIO | ¡MENUDO BODÓN! 🎧 Un día inolvidable, una pareja increíble y una fiesta que no olvidaremos. ❤️🥂 Tuvimos el placer de poner ritmo a la boda de María y Sergio… ¡y vaya manera de celebrarlo! 🕺💃🔥 🎧 TWO GENERATIONS ⚡ DJ BOTA & DJ CLEMENT @DJ Clement  Dos generaciones, una misma pasión. 🎶❤️ Gracias por confiar en nosotros para hacer de vuestro gran día una auténtica FIESTA. 🔥 🎥 ¡Dale al play y disfruta de algunos de los mejores momentos! #boda  #fyp  #viral  #DJBodas #Bodas2026",
       "views": 49000,
-      "likes": null,
-      "comments": null,
-      "duration": null,
-      "timestamp": 1794233740,
+      "likes": 45,
+      "comments": 0,
+      "duration": 67,
+      "timestamp": 1794233748,
       "cover": "data/tiktok/7706175238081482016.jpg"
     },
     {
       "id": "7704446554035342624",
       "url": "https://www.tiktok.com/@d.j.bota/video/7704446554035342624",
       "description": "#trendiing #ciudadreal #dj #eventos #fiestas",
-      "views": 354,
-      "likes": null,
-      "comments": null,
-      "duration": null,
-      "timestamp": 1793831250,
+      "views": 358,
+      "likes": 11,
+      "comments": 0,
+      "duration": 49,
+      "timestamp": 1793831256,
       "cover": "data/tiktok/7704446554035342624.jpg"
     },
     {
       "id": "7703323595711253792",
       "url": "https://www.tiktok.com/@d.j.bota/video/7703323595711253792",
       "description": "#fiestas #eventos #dj #ciudadreal #trendiing",
-      "views": 351,
-      "likes": 5,
+      "views": 356,
+      "likes": 7,
       "comments": 0,
       "duration": 119,
-      "timestamp": 1793569791,
+      "timestamp": 1793569798,
       "cover": "data/tiktok/7703323595711253792.jpg"
     }
   ],
   "instagram": {
     "handle": "d.j.bota"
   },
-  "updated": "2026-11-12T00:45:32+00:00"
+  "updated": "2026-11-13T01:50:42+00:00"
 }
